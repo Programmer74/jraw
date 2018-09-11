@@ -1,8 +1,11 @@
 package com.programmer74.jrawtool;
 
 import java.awt.image.BufferedImage;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class DoubleImage {
@@ -30,7 +33,8 @@ public class DoubleImage {
   private DoubleImageCropParams prevCropParams = new DoubleImageCropParams(0, 0, 0, 0);
 
   private Consumer<Integer> afterChunkPaintedCallback;
-  private ExecutorService executorService = Executors.newFixedThreadPool(4);
+  private final int nThreads = 2;
+  private ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
 
 
   public DoubleImage(final int width, final int height) {
@@ -108,7 +112,7 @@ public class DoubleImage {
       for (int y = offsetY; y < offsetY + height; y++) {
 
         if (shouldStop) {
-          System.out.println("Requested to stop at " + x + ":" + y);
+//          System.out.println("Requested to stop at " + x + ":" + y);
           return;
         }
         double[] pixel = pixels[x][y].clone();
@@ -184,6 +188,8 @@ public class DoubleImage {
   public void subscribeToAfterChunkPaintedCallback(Consumer<Integer> callback) {
     this.afterChunkPaintedCallback = callback;
   }
+
+  private CountDownLatch latch = null;
   private void scheduleExecutor (final int x, final int y, final int w, final int h) {
     executorService.submit(new Runnable() {
       @Override
@@ -192,11 +198,21 @@ public class DoubleImage {
         if (!isDirty) {
           afterChunkPaintedCallback.accept(0);
         }
+        latch.countDown();
       }
     });
   }
   public BufferedImage getBufferedImageAsync() {
     if (isDirty) {
+
+      if (latch != null) {
+        try {
+          latch.await(10, TimeUnit.SECONDS);
+        } catch (Exception ex) {
+          ex.printStackTrace();
+        }
+      }
+      latch = new CountDownLatch(nThreads);
 
       isDirty = false;
       int w = 500;
@@ -206,6 +222,8 @@ public class DoubleImage {
 
       for (x = 0; x < width; x += w) {
         for (y = 0; y < height; y += h) {
+          if (x + w > width) x = width - w;
+          if (y + h > height) y = height - h;
           scheduleExecutor(x, y, w, h);
         }
       }
