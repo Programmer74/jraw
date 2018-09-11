@@ -67,12 +67,13 @@ public class DoubleImageComponent extends Component {
         if (newScale < 0.1) newScale = 0.1;
         if (newScale > 2) newScale = 2;
 
-        System.out.println("New scale: " + newScale);
+//        System.out.println("New scale: " + newScale);
         setScaleByMouse(newScale, mouseWheelEvent.getX(), mouseWheelEvent.getY());
       }
     });
 
     recalculatePaintParams();
+    doubleImage.subscribeToAfterChunkPaintedCallback((e) -> this.repaint());
   }
 
   public void setAfterPaintCallback(final Consumer<Object> afterPaintCallback) {
@@ -138,13 +139,13 @@ public class DoubleImageComponent extends Component {
   }
 
   public void setScaleByMouse(final double newScale, final int cursorX, final int cursorY) {
-    System.out.println("Mouse cursor at " + cursorX + ":" + cursorY);
+//    System.out.println("Mouse cursor at " + cursorX + ":" + cursorY);
 
-    System.out.println("Current scale: " + scale + " new scale: " + newScale);
+//    System.out.println("Current scale: " + scale + " new scale: " + newScale);
 
     double onImageX = (cursorX - paintX) * 1.0 / paintW;
     double onImageY = (cursorY - paintY) * 1.0 / paintH;
-    System.out.println("old onImageCursor at " + onImageX + " : " + onImageY);
+//    System.out.println("old onImageCursor at " + onImageX + " : " + onImageY);
 
     this.doAutoScale = false;
     this.scale = newScale;
@@ -152,7 +153,7 @@ public class DoubleImageComponent extends Component {
 
     double newOnImageX = (cursorX - paintX) * 1.0 / paintW;
     double newOnImageY = (cursorY - paintY) * 1.0 / paintH;
-    System.out.println("new onImageCursor at " + newOnImageX + " : " + newOnImageY);
+//    System.out.println("new onImageCursor at " + newOnImageX + " : " + newOnImageY);
 
     double onImageXDelta = (newOnImageX - onImageX);
     double onImageYDelta = (newOnImageY - onImageY);
@@ -178,7 +179,7 @@ public class DoubleImageComponent extends Component {
     double hK = imageHeight * 1.0 / componentHeight;
 
     scale = 1 / Math.max(wK, hK);
-    System.out.println("Calculated Scale : " + scale);
+//    System.out.println("Calculated Scale : " + scale);
     return scale;
   }
 
@@ -197,11 +198,12 @@ public class DoubleImageComponent extends Component {
     if (rx > doubleImage.getWidth()) rx = doubleImage.getWidth() * 1.0;
     if (ry > doubleImage.getHeight()) ry = doubleImage.getHeight() * 1.0;
 
+//    BufferedImage preview  = doubleImage.getBufferedImagePreview(
+//          new DoubleImageCropParams(lx.intValue(), ly.intValue(), rx.intValue(), ry.intValue()),
+//          getWidth(), getHeight());
 
-    BufferedImage preview = doubleImage.getBufferedImagePreview(
-        new DoubleImageCropParams(lx.intValue(), ly.intValue(), rx.intValue(), ry.intValue()),
-        getWidth(), getHeight());
 //    BufferedImage preview = doubleImage.getBufferedImage();
+    BufferedImage preview = doubleImage.getBufferedImageAsync();
     g.drawImage(preview, paintX, paintY, paintW, paintH, this);
     if (afterPaintCallback != null) {
       afterPaintCallback.accept(this);

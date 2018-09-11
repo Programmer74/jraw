@@ -1,6 +1,9 @@
 package com.programmer74.jrawtool;
 
 import java.awt.image.BufferedImage;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 public class DoubleImage {
   //x,y,{r,g,bufferedImage}
@@ -25,6 +28,10 @@ public class DoubleImage {
   private boolean isDirty = true;
   private boolean isPreviewDirty = true;
   private DoubleImageCropParams prevCropParams = new DoubleImageCropParams(0, 0, 0, 0);
+
+  private Consumer<Integer> afterChunkPaintedCallback;
+  private ExecutorService executorService = Executors.newFixedThreadPool(4);
+
 
   public DoubleImage(final int width, final int height) {
     this.width = width;
@@ -92,9 +99,18 @@ public class DoubleImage {
   }
 
   public void paintOnBufferedImage(BufferedImage image) {
-    for (int x = 0; x < width; x++) {
-      for (int y = 0; y < height; y++) {
+    paintOnBufferedImage(image, 0, 0, width, height, false);
+  }
 
+  public void paintOnBufferedImage(BufferedImage image,
+                                   int offsetX, int offsetY, int width, int height, boolean shouldStop) {
+    for (int x = offsetX; x < offsetX + width; x++) {
+      for (int y = offsetY; y < offsetY + height; y++) {
+
+        if (shouldStop) {
+          System.out.println("Requested to stop at " + x + ":" + y);
+          return;
+        }
         double[] pixel = pixels[x][y].clone();
 
         adjustWhiteBalance(pixel);
@@ -165,6 +181,37 @@ public class DoubleImage {
     return bufferedImagePreview;
   }
 
+  public void subscribeToAfterChunkPaintedCallback(Consumer<Integer> callback) {
+    this.afterChunkPaintedCallback = callback;
+  }
+  private void scheduleExecutor (final int x, final int y, final int w, final int h) {
+    executorService.submit(new Runnable() {
+      @Override
+      public void run() {
+        paintOnBufferedImage(bufferedImage, x, y, w, h, isDirty);
+        if (!isDirty) {
+          afterChunkPaintedCallback.accept(0);
+        }
+      }
+    });
+  }
+  public BufferedImage getBufferedImageAsync() {
+    if (isDirty) {
+
+      isDirty = false;
+      int w = 500;
+      int h = 500;
+      int x = 0;
+      int y = 0;
+
+      for (x = 0; x < width; x += w) {
+        for (y = 0; y < height; y += h) {
+          scheduleExecutor(x, y, w, h);
+        }
+      }
+    }
+    return bufferedImage;
+  }
 
   public void setWhiteBalance(double rK, double gK, double bK) {
     this.rWB = rK;
