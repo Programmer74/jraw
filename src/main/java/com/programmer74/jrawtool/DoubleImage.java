@@ -30,12 +30,14 @@ public class DoubleImage {
 
   private boolean isDirty = true;
   private boolean isFastPreviewDirty = true;
-  private boolean isSlowPreviewDirty = true;
+  public boolean isSlowPreviewDirty = true;
   private boolean slowPreviewReady = false;
 
   private Consumer<Integer> afterChunkPaintedCallback;
   private final int nThreads = 2;
   private ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
+
+  private DoubleImageCropParams prevParams = new DoubleImageCropParams(0,0,0,0);
 
 
   public DoubleImage(final int width, final int height) {
@@ -111,9 +113,8 @@ public class DoubleImage {
 
   public void paintOnBufferedImage(final BufferedImage image,
                                    final int offsetX, final int offsetY, final int width, final int height, final boolean shouldStop) {
-    System.out.println("ox: " + offsetX + " oy: " + offsetY + " w: " + width + " h:" + height + " shs: " + shouldStop);
-    for (int x = offsetX; x < offsetX + width - 1; x++) {
-      for (int y = offsetY; y < offsetY + height - 1; y++) {
+   for (int x = offsetX; x < offsetX + width; x++) {
+      for (int y = offsetY; y < offsetY + height; y++) {
         if (shouldStop) {
           System.out.println("Requested to stop at " + x + ":" + y);
           return;
@@ -131,9 +132,34 @@ public class DoubleImage {
         int rgbcolor = 0xff000000 | r << 16 | g << 8 | b;
         image.setRGB(x, y, rgbcolor);
       }
-      System.out.println(x);
     }
   }
+
+  public void paintSlowPreviewOnBufferedImage(final BufferedImage image,
+                                   final int offsetX, final int offsetY, final int width, final int height) {
+    for (int x = offsetX; x < offsetX + width; x++) {
+      for (int y = offsetY; y < offsetY + height; y++) {
+        if (isSlowPreviewDirty) {
+          System.out.println("Requested to stop at " + x + ":" + y);
+          return;
+        }
+        double[] pixel = pixels[x][y].clone();
+
+        adjustWhiteBalance(pixel);
+        adjustGamma(pixel);
+        adjustExposure(pixel);
+
+        int r = doubleValueToUint8T(pixel[0]);
+        int g = doubleValueToUint8T(pixel[1]);
+        int b = doubleValueToUint8T(pixel[2]);
+
+        int rgbcolor = 0xff000000 | r << 16 | g << 8 | b;
+        image.setRGB(x, y, rgbcolor);
+      }
+      if ((x % 100) == 0) System.out.println(x);
+    }
+  }
+
 
   public void paintOnBufferedImageForPreview(BufferedImage image, int lx, int ly, int rx, int ry) {
 
@@ -184,16 +210,14 @@ public class DoubleImage {
     if (rx > width) rx = width * 1.0;
     if (ry > height) ry = height * 1.0;
 
-    System.out.println("lx " + lx + " ly " + ly + " rx " + rx + " ry " + ry);
-
     if ((bufferedImagePreviewSlow == null) ||
-      ((bufferedImagePreviewSlow.getWidth() != windowWidth) || (bufferedImagePreviewSlow.getHeight() != windowHeight))) {
+        (bufferedImagePreviewSlow.getWidth() != windowWidth) ||
+        (bufferedImagePreviewSlow.getHeight() != windowHeight)) {
       System.out.println("New preview size: " + windowWidth + ":" + windowHeight);
-        isSlowPreviewDirty = true;
+//        isSlowPreviewDirty = true;
     }
     if (isSlowPreviewDirty) {
         System.out.println("scheduling painting slow preview");
-        bufferedImagePreviewSlow = new BufferedImage(windowWidth, windowHeight, BufferedImage.TYPE_INT_RGB);
         schedulePaintingFullBufferedImage(lx.intValue(), ly.intValue(), rx.intValue(), ry.intValue());
     }
     if (isFastPreviewDirty) {
@@ -201,8 +225,10 @@ public class DoubleImage {
       paintOnBufferedImageForPreview(bufferedImagePreviewFast, 0, 0, width, height);
     }
     if (slowPreviewReady) {
-      //return bufferedImagePreviewSlow;
+      System.out.println("slow preview ready");
+      return bufferedImagePreviewSlow;
     }
+    System.out.println("slow preview NOT READY");
     return bufferedImagePreviewFast;
   }
 
@@ -216,14 +242,22 @@ public class DoubleImage {
       @Override
       public void run() {
         System.out.println("slow preview: begin painting");
+        System.out.println("lx " + lx + " ly " + ly + " rx " + rx + " ry " + ry);
 //        paintOnBufferedImage(bufferedImagePreviewSlow, lx, ly, rx - lx, ry - ly, isSlowPreviewDirty);
-        paintOnBufferedImage(bufferedImagePreviewSlow);
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        paintSlowPreviewOnBufferedImage(img, lx, ly, rx - lx, ry - ly);
         System.out.println("slow preview: done or cancelled painting");
+        latch.countDown();
         if (!isSlowPreviewDirty) {
+          System.out.println("slow preview: setting image");
+          bufferedImagePreviewSlow = img;
+          System.out.println("slow preview: setting image done");
           slowPreviewReady = true;
-          System.out.println("slow preview ready");
+          System.out.println("slow preview: ready");
           afterChunkPaintedCallback.accept(0);
-          latch.countDown();
+        } else {
+          System.out.println("slow preview: for some reason isSlowPreviewDirty is true");
+          schedulePaintingFullBufferedImage(lx, ly, rx, ry);
         }
       }
     });

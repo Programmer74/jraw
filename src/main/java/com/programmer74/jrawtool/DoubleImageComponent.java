@@ -57,6 +57,7 @@ public class DoubleImageComponent extends Component {
         pressedY = mouseEvent.getY();
 
         forceImageInsidePreviewPanel();
+        doubleImage.isSlowPreviewDirty = true;
         mouseEvent.getComponent().repaint();
       }
     });
@@ -162,6 +163,7 @@ public class DoubleImageComponent extends Component {
     paintY = paintY + (int)(paintH * onImageYDelta);
 
     forceImageInsidePreviewPanel();
+    doubleImage.isSlowPreviewDirty = true;
     this.repaint();
   }
 
