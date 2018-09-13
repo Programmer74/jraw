@@ -22,9 +22,10 @@ public class DoubleImageComponent extends Component {
   private int pressedX = 0;
   private int pressedY = 0;
 
+
   private boolean doAutoScale = true;
 
-  private Consumer<Object> afterPaintCallback;
+  private Consumer<Object> afterPreviewCreatedCallback;
 
   public DoubleImageComponent(final DoubleImage doubleImage) {
     this.doubleImage = doubleImage;
@@ -77,7 +78,7 @@ public class DoubleImageComponent extends Component {
   }
 
   public void setAfterPaintCallback(final Consumer<Object> afterPaintCallback) {
-    this.afterPaintCallback = afterPaintCallback;
+    this.afterPreviewCreatedCallback = afterPaintCallback;
   }
 
   public void setScale(final double newScale) {
@@ -188,25 +189,15 @@ public class DoubleImageComponent extends Component {
   public void paint(Graphics g) {
     recalculatePaintParams();
 
-    Double lx = (-paintX) * 1.0 / paintW * doubleImage.getWidth();
-    Double rx = (getWidth() - paintX) * 1.0 / paintW * doubleImage.getWidth();
-    Double ly = (-paintY) * 1.0 / paintH * doubleImage.getHeight();
-    Double ry = (getHeight() - paintY) * 1.0 / paintH * doubleImage.getHeight();
-
-    if (lx < 0) lx = 0.0;
-    if (ly < 0) ly = 0.0;
-    if (rx > doubleImage.getWidth()) rx = doubleImage.getWidth() * 1.0;
-    if (ry > doubleImage.getHeight()) ry = doubleImage.getHeight() * 1.0;
-
-//    BufferedImage preview  = doubleImage.getBufferedImagePreview(
-//          new DoubleImageCropParams(lx.intValue(), ly.intValue(), rx.intValue(), ry.intValue()),
-//          getWidth(), getHeight());
+    BufferedImage preview  = doubleImage.getBufferedImagePreview(
+          paintX, paintY, paintW, paintH,
+          getWidth(), getHeight());
 
 //    BufferedImage preview = doubleImage.getBufferedImage();
-    BufferedImage preview = doubleImage.getBufferedImageAsync();
+//    BufferedImage preview = doubleImage.getBufferedImageAsync();
     g.drawImage(preview, paintX, paintY, paintW, paintH, this);
-    if (afterPaintCallback != null) {
-      afterPaintCallback.accept(this);
+    if (afterPreviewCreatedCallback != null) {
+      afterPreviewCreatedCallback.accept(this);
     }
   }
 
