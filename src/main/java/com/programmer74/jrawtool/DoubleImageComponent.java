@@ -75,7 +75,6 @@ public class DoubleImageComponent extends Component {
         if (newScale < 0.1) newScale = 0.1;
         if (newScale > 2) newScale = 2;
 
-//        System.out.println("New scale: " + newScale);
         setScaleByMouse(newScale, mouseWheelEvent.getX(), mouseWheelEvent.getY());
         System.out.println("scroll");
       }

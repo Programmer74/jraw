@@ -102,12 +102,12 @@ public class DoubleImage {
   }
 
   private void markSlowPreviewDirty() {
-    isSlowPreviewDirty = false;
+    isSlowPreviewDirty = true;
   }
 
   private void markPreviewDirty() {
     markSlowPreviewDirty();
-    isFastPreviewDirty = false;
+    isFastPreviewDirty = true;
   }
 
   private void markDirty() {
