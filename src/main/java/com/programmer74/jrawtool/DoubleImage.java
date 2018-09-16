@@ -29,6 +29,7 @@ public class DoubleImage {
   private boolean isDirty = true;
   private boolean isFastPreviewDirty = true;
   public boolean isSlowPreviewDirty = true;
+  private boolean isSlowPreviewReady = false;
 
   protected Consumer<Integer> afterChunkPaintedCallback;
   private final int nThreads = 2;
@@ -207,6 +208,7 @@ public class DoubleImage {
     if (isSlowPreviewDirty) {
         System.out.println("scheduling painting slow preview");
         isSlowPreviewDirty = false;
+        isSlowPreviewReady = false;
         previewGenerator.schedulePreviewRendering(lx, ly, rx, ry, getWidth(), getHeight());
     }
     if (isFastPreviewDirty) {
@@ -215,10 +217,15 @@ public class DoubleImage {
     }
     if (previewGenerator.isGeneratedPreviewReady()) {
       System.out.println("slow preview ready");
+      isSlowPreviewReady = true;
       return previewGenerator.getGeneratedPreview();
     }
     System.out.println("slow preview NOT READY");
     return bufferedImagePreviewFast;
+  }
+
+  public boolean wasSlowPreviewReady() {
+    return isSlowPreviewReady;
   }
 
   public void subscribeToAfterChunkPaintedCallback(Consumer<Integer> callback) {

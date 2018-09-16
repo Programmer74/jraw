@@ -1,5 +1,6 @@
 package com.programmer74.jrawtool;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -21,7 +22,6 @@ public class DoubleImageComponent extends Component {
 
   private int pressedX = 0;
   private int pressedY = 0;
-
 
   private boolean doAutoScale = true;
 
@@ -201,7 +201,14 @@ public class DoubleImageComponent extends Component {
     BufferedImage preview  = doubleImage.getBufferedImagePreview(
           paintX, paintY, paintW, paintH, getWidth(), getHeight());
 
-    g.drawImage(preview, paintX, paintY, paintW, paintH, this);
+    if (doubleImage.wasSlowPreviewReady()) {
+      setNormalCursor();
+      g.drawImage(preview, 0, 0, getWidth(), getHeight(), this);
+    } else {
+      setWaitCursor();
+      g.drawImage(preview, paintX, paintY, paintW, paintH, this);
+
+    }
     if (afterPreviewCreatedCallback != null) {
       afterPreviewCreatedCallback.accept(this);
     }
@@ -217,5 +224,12 @@ public class DoubleImageComponent extends Component {
       return new Dimension(Math.max(100, doubleImage.getWidth() / 6),
           Math.max(100, doubleImage.getHeight() / 6));
     }
+  }
+
+  private void setWaitCursor() {
+    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+  }
+  private void setNormalCursor() {
+    setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
   }
 }
