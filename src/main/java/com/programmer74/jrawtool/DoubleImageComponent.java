@@ -33,6 +33,9 @@ public class DoubleImageComponent extends Component {
       @Override public void mousePressed(final MouseEvent mouseEvent) {
         pressedX = mouseEvent.getX();
         pressedY = mouseEvent.getY();
+        double onImageX = (mouseEvent.getX() - paintX) * doubleImage.getWidth() / paintW;
+        double onImageY = (mouseEvent.getY() - paintY) * doubleImage.getHeight() / paintH;
+        System.out.println("onImageCursor at " + onImageX + " : " + onImageY);
       }
       @Override public void mouseClicked(final MouseEvent e) {
         if (e.getClickCount() == 2 && !e.isConsumed()) {
@@ -40,6 +43,9 @@ public class DoubleImageComponent extends Component {
           //this is doubleclick handler
           setAutoScale();
         }
+      }
+      @Override public void mouseMoved(final MouseEvent e) {
+
       }
     });
 
@@ -71,6 +77,7 @@ public class DoubleImageComponent extends Component {
 
 //        System.out.println("New scale: " + newScale);
         setScaleByMouse(newScale, mouseWheelEvent.getX(), mouseWheelEvent.getY());
+        System.out.println("scroll");
       }
     });
 
@@ -192,11 +199,8 @@ public class DoubleImageComponent extends Component {
     recalculatePaintParams();
 
     BufferedImage preview  = doubleImage.getBufferedImagePreview(
-          paintX, paintY, paintW, paintH,
-          getWidth(), getHeight());
+          paintX, paintY, paintW, paintH, getWidth(), getHeight());
 
-//    BufferedImage preview = doubleImage.getBufferedImage();
-//    BufferedImage preview = doubleImage.getBufferedImageAsync();
     g.drawImage(preview, paintX, paintY, paintW, paintH, this);
     if (afterPreviewCreatedCallback != null) {
       afterPreviewCreatedCallback.accept(this);
