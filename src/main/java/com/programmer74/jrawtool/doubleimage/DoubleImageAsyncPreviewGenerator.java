@@ -1,4 +1,4 @@
-package com.programmer74.jrawtool;
+package com.programmer74.jrawtool.doubleimage;
 
 import java.awt.image.BufferedImage;
 
@@ -15,11 +15,11 @@ public class DoubleImageAsyncPreviewGenerator {
     this.parent = doubleImage;
   }
 
-  public void schedulePreviewRendering(final Double lx, final Double ly, final Double rx, final Double ry, int width, int height) {
-    schedulePreviewRendering(lx.intValue(), ly.intValue(), rx.intValue(), ry.intValue(), width, height);
+  public void schedulePreviewRendering(final Double lx, final Double ly, final Double rx, final Double ry) {
+    schedulePreviewRendering(lx.intValue(), ly.intValue(), rx.intValue(), ry.intValue());
   }
 
-  public void schedulePreviewRendering(final int lx, final int ly, final int rx, final int ry, final int width, final int height) {
+  public void schedulePreviewRendering(final int lx, final int ly, final int rx, final int ry) {
     if (workerThread != null) {
       paintingShouldStop = true;
       try {
@@ -69,9 +69,7 @@ public class DoubleImageAsyncPreviewGenerator {
         }
         double[] pixel = parent.pixels[fromX][fromY].clone();
 
-        parent.adjustWhiteBalance(pixel);
-        parent.adjustGamma(pixel);
-        parent.adjustExposure(pixel);
+        parent.adjustPixelParams(pixel);
 
         int r = parent.doubleValueToUint8T(pixel[0]);
         int g = parent.doubleValueToUint8T(pixel[1]);

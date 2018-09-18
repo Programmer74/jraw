@@ -1,13 +1,12 @@
-package com.programmer74.jrawtool;
+package com.programmer74.jrawtool.components;
 
-import javax.swing.*;
+import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import java.awt.image.BufferedImage;
 import java.util.function.Consumer;
 
 public class DoubleImageComponent extends Component {
@@ -29,13 +28,11 @@ public class DoubleImageComponent extends Component {
 
   public DoubleImageComponent(final DoubleImage doubleImage) {
     this.doubleImage = doubleImage;
+    this.doubleImage.setParent(this);
     this.addMouseListener(new MouseAdapter() {
       @Override public void mousePressed(final MouseEvent mouseEvent) {
         pressedX = mouseEvent.getX();
         pressedY = mouseEvent.getY();
-        double onImageX = (mouseEvent.getX() - paintX) * doubleImage.getWidth() / paintW;
-        double onImageY = (mouseEvent.getY() - paintY) * doubleImage.getHeight() / paintH;
-        System.out.println("onImageCursor at " + onImageX + " : " + onImageY);
       }
       @Override public void mouseClicked(final MouseEvent e) {
         if (e.getClickCount() == 2 && !e.isConsumed()) {
@@ -81,7 +78,17 @@ public class DoubleImageComponent extends Component {
     });
 
     recalculatePaintParams();
-    doubleImage.subscribeToAfterChunkPaintedCallback((e) -> this.repaint());
+    doubleImage.setAfterChunkPaintedCallback((e) -> this.repaint());
+    doubleImage.setAfterSlowPreviewRenderingBeginCallback((e) -> setWaitCursor());
+    doubleImage.setAfterSlowPreviewRenderingEndCallback((e) -> setNormalCursor());
+  }
+
+  public int getOnImageX(int cursorX) {
+    return (cursorX - paintX) * doubleImage.getWidth() / paintW;
+  }
+
+  public int getOnImageY(int cursorY) {
+    return (cursorY - paintY) * doubleImage.getHeight() / paintH;
   }
 
   public void setAfterPaintCallback(final Consumer<Object> afterPaintCallback) {
@@ -196,18 +203,8 @@ public class DoubleImageComponent extends Component {
   @Override
   public void paint(Graphics g) {
     recalculatePaintParams();
-
-    BufferedImage preview  = doubleImage.getBufferedImagePreview(
-          paintX, paintY, paintW, paintH, getWidth(), getHeight());
-
-    if (doubleImage.wasSlowPreviewReady()) {
-      setNormalCursor();
-      g.drawImage(preview, 0, 0, getWidth(), getHeight(), this);
-    } else {
-      setWaitCursor();
-      g.drawImage(preview, paintX, paintY, paintW, paintH, this);
-
-    }
+    forceImageInsidePreviewPanel();
+    doubleImage.paintPreviewOnGraphics(g, paintX, paintY, paintW, paintH, getWidth(), getHeight());
     if (afterPreviewCreatedCallback != null) {
       afterPreviewCreatedCallback.accept(this);
     }

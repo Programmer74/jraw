@@ -1,7 +1,7 @@
-package com.programmer74.jrawtool;
+package com.programmer74.jrawtool.doubleimage;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -20,8 +20,9 @@ public class DoubleImage {
   private double gWB = 1.0000;
   private double bWB = 1.163172;
 
-  private double brightness = 1.0;
-  private int exposureStop = 0;
+  private double exposureStop = 0;
+  private double brightness = 0;
+  private double contrast = 1.0;
 
   private BufferedImage bufferedImage;
   private BufferedImage bufferedImagePreviewFast;
@@ -32,20 +33,27 @@ public class DoubleImage {
   private boolean isSlowPreviewReady = false;
 
   protected Consumer<Integer> afterChunkPaintedCallback;
-  private final int nThreads = 2;
-  private ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
+  protected Consumer<Integer> afterSlowPreviewRenderingBeginCallback;
+  protected Consumer<Integer> afterSlowPreviewRenderingEndCallback;
 
   private DoubleImageAsyncPreviewGenerator previewGenerator;
 
   private int paintX, paintY, paintW, paintH, windowWidth, windowHeight;
+  private int oldWindowWidth = 0, oldWindowHeight = 0;
+
+  private Component parent;
 
   public DoubleImage(final int width, final int height) {
     this.width = width;
     this.height = height;
     this.pixels = new double[width][height][3];
     this.bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-    this.bufferedImagePreviewFast = new BufferedImage(width / 6, height / 6, BufferedImage.TYPE_INT_RGB);
+    this.bufferedImagePreviewFast = new BufferedImage(width / 8, height / 8, BufferedImage.TYPE_INT_RGB);
     this.previewGenerator = new DoubleImageAsyncPreviewGenerator(this);
+  }
+
+  public void setParent(final Component parent) {
+    this.parent = parent;
   }
 
   public int getWidth() {
@@ -79,8 +87,14 @@ public class DoubleImage {
     return A * Math.pow(input, gamma);
   }
 
-  private double calculateExposureCorrection(double input, int stop) {
+  private double calculateExposureCorrection(double input, double stop) {
     return input * Math.pow(2, stop);
+  }
+
+  private double calculateBrightnessContrastCorrection(double input, double brightness, double contrast) {
+    //R = (int)(((((R / 255.0) - 0.5) * contrast) + 0.5) * 255.0);
+    double contrasted = (input - 0.5) * contrast + 0.5;
+    return contrasted + brightness;
   }
 
   protected void adjustGamma(double[] pixel) {
@@ -101,8 +115,15 @@ public class DoubleImage {
     }
   }
 
+  protected void adjustBrightnessContrast(double[] pixel) {
+    for (int i = 0; i < 3; i++) {
+      pixel[i] = calculateBrightnessContrastCorrection(pixel[i], brightness, contrast);
+    }
+  }
+
   private void markSlowPreviewDirty() {
     isSlowPreviewDirty = true;
+    isSlowPreviewReady = false;
   }
 
   private void markPreviewDirty() {
@@ -124,9 +145,7 @@ public class DoubleImage {
       for (int y = offsetY; y < offsetY + height; y++) {
         double[] pixel = pixels[x][y].clone();
 
-        adjustWhiteBalance(pixel);
-        adjustGamma(pixel);
-        adjustExposure(pixel);
+        adjustPixelParams(pixel);
 
         int r = doubleValueToUint8T(pixel[0]);
         int g = doubleValueToUint8T(pixel[1]);
@@ -136,6 +155,13 @@ public class DoubleImage {
         image.setRGB(x, y, rgbcolor);
       }
     }
+  }
+
+  protected void adjustPixelParams(double[] pixel) {
+    adjustWhiteBalance(pixel);
+    adjustGamma(pixel);
+    adjustExposure(pixel);
+    adjustBrightnessContrast(pixel);
   }
 
   public void paintFastPreviewOnSmallerBufferedImage(BufferedImage image, int lx, int ly, int rx, int ry) {
@@ -151,9 +177,7 @@ public class DoubleImage {
 
         double[] pixel = pixels[sx][sy].clone();
 
-        adjustWhiteBalance(pixel);
-        adjustGamma(pixel);
-        adjustExposure(pixel);
+        adjustPixelParams(pixel);
 
         int r = doubleValueToUint8T(pixel[0]);
         int g = doubleValueToUint8T(pixel[1]);
@@ -173,7 +197,7 @@ public class DoubleImage {
     return bufferedImage;
   }
 
-  public BufferedImage getBufferedImagePreview(
+  private void applyPreviewCoordinates(
       int paintX, int paintY, int paintW, int paintH,
       int windowWidth, int windowHeight) {
     this.paintX = paintX;
@@ -182,10 +206,9 @@ public class DoubleImage {
     this.paintH = paintH;
     this.windowWidth = windowWidth;
     this.windowHeight = windowHeight;
-    return generateBufferedImagePreview();
   }
 
-  private BufferedImage generateBufferedImagePreview() {
+  private BufferedImage getBufferedImagePreview() {
 
     System.out.println("PaintX " + paintX + " PaintY " + paintY + " PaintW " + paintW + " PaintH " + paintH
         + " wW " + windowWidth + " wH " + windowHeight);
@@ -209,7 +232,8 @@ public class DoubleImage {
         System.out.println("scheduling painting slow preview");
         isSlowPreviewDirty = false;
         isSlowPreviewReady = false;
-        previewGenerator.schedulePreviewRendering(lx, ly, rx, ry, getWidth(), getHeight());
+        previewGenerator.schedulePreviewRendering(lx, ly, rx, ry);
+        afterSlowPreviewRenderingBeginCallback.accept(0);
     }
     if (isFastPreviewDirty) {
       isFastPreviewDirty = false;
@@ -218,24 +242,79 @@ public class DoubleImage {
     if (previewGenerator.isGeneratedPreviewReady()) {
       System.out.println("slow preview ready");
       isSlowPreviewReady = true;
+      afterSlowPreviewRenderingEndCallback.accept(0);
       return previewGenerator.getGeneratedPreview();
     }
     System.out.println("slow preview NOT READY");
     return bufferedImagePreviewFast;
   }
 
-  public boolean wasSlowPreviewReady() {
-    return isSlowPreviewReady;
+  public void paintPreviewOnGraphics(Graphics g,
+      int paintX, int paintY, int paintW, int paintH,
+      int windowWidth, int windowHeight) {
+
+    if ((oldWindowHeight != windowHeight) || (oldWindowWidth != windowWidth)) {
+      markSlowPreviewDirty();
+      oldWindowHeight = windowHeight;
+      oldWindowWidth = windowWidth;
+    }
+
+    applyPreviewCoordinates(
+        paintX, paintY, paintW, paintH, windowWidth, windowHeight);
+
+    BufferedImage preview = getBufferedImagePreview();
+
+    if (isSlowPreviewReady) {
+      g.drawImage(preview,
+          Math.max(0, paintX),
+          Math.max(0, paintY),
+          Math.min(windowWidth, paintW),
+          Math.min(windowHeight, paintH),
+          parent);
+    } else {
+      g.drawImage(preview, paintX, paintY, paintW, paintH, parent);
+    }
   }
 
-  public void subscribeToAfterChunkPaintedCallback(Consumer<Integer> callback) {
-    this.afterChunkPaintedCallback = callback;
+  public void setAfterChunkPaintedCallback(
+      final Consumer<Integer> afterChunkPaintedCallback) {
+    this.afterChunkPaintedCallback = afterChunkPaintedCallback;
+  }
+
+  public void setAfterSlowPreviewRenderingBeginCallback(
+      final Consumer<Integer> afterSlowPreviewRenderingBeginCallback) {
+    this.afterSlowPreviewRenderingBeginCallback = afterSlowPreviewRenderingBeginCallback;
+  }
+
+  public void setAfterSlowPreviewRenderingEndCallback(
+      final Consumer<Integer> afterSlowPreviewRenderingEndCallback) {
+    this.afterSlowPreviewRenderingEndCallback = afterSlowPreviewRenderingEndCallback;
   }
 
   public void setWhiteBalance(double rK, double gK, double bK) {
     this.rWB = rK;
     this.gWB = gK;
     this.bWB = bK;
+    markDirty();
+  }
+
+  public void setExposureStop(double exposureStop) {
+    this.exposureStop = exposureStop;
+    markDirty();
+  }
+
+  public void setBrightness(double brightness) {
+    this.brightness = brightness;
+    markDirty();
+  }
+
+  public void setContrast(double contrast) {
+    this.contrast = contrast;
+    markDirty();
+  }
+
+  public void setGamma(double gamma) {
+    this.gGamma = 1 / gamma;
     markDirty();
   }
 }
