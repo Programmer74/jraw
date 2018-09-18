@@ -1,5 +1,6 @@
 package com.programmer74.jrawtool.doubleimage;
 
+import com.programmer74.jrawtool.components.HistogramComponent;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.ExecutorService;
@@ -42,6 +43,7 @@ public class DoubleImage {
   private int oldWindowWidth = 0, oldWindowHeight = 0;
 
   private Component parent;
+  private HistogramComponent histogramComponent;
 
   public DoubleImage(final int width, final int height) {
     this.width = width;
@@ -54,6 +56,11 @@ public class DoubleImage {
 
   public void setParent(final Component parent) {
     this.parent = parent;
+  }
+
+  public void setHistogramComponent(
+      final HistogramComponent histogramComponent) {
+    this.histogramComponent = histogramComponent;
   }
 
   public int getWidth() {
@@ -166,6 +173,10 @@ public class DoubleImage {
 
   public void paintFastPreviewOnSmallerBufferedImage(BufferedImage image, int lx, int ly, int rx, int ry) {
 
+    if (histogramComponent != null) {
+      histogramComponent.resetHistogram();
+    }
+
     for (int x = 0; x < image.getWidth(); x++) {
       for (int y = 0; y < image.getHeight(); y++) {
 
@@ -185,7 +196,15 @@ public class DoubleImage {
 
         int rgbcolor = 0xff000000 | r << 16 | g << 8 | b;
         image.setRGB(x, y, rgbcolor);
+
+        if (histogramComponent != null) {
+          histogramComponent.addPixelToHistogram(r, g, b);
+        }
       }
+    }
+
+    if (histogramComponent != null) {
+      histogramComponent.paintHistogram();
     }
   }
 

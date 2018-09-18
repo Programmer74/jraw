@@ -1,6 +1,7 @@
 package com.programmer74.jrawtool;
 
 import com.programmer74.jrawtool.components.DisplayingSlider;
+import com.programmer74.jrawtool.components.HistogramComponent;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.components.DoubleImageComponent;
 import com.programmer74.jrawtool.pgmimage.PGMImage;
@@ -22,6 +23,7 @@ public class Main{
 
     DoubleImage doubleImage = PGMImage.loadPicture(filename);
     DoubleImageComponent doubleImageComponent = new DoubleImageComponent(doubleImage);
+    HistogramComponent histogramComponent = new HistogramComponent(doubleImage);
 
     JFrame f = new JFrame("Image: " + filename);
     f.addWindowListener(new WindowAdapter() {
@@ -119,5 +121,10 @@ public class Main{
     doubleImageComponent.setAfterPaintCallback(e -> {
       //System.out.println("I was painted");
     });
+
+    JFrame f3 = new JFrame("Histogram");
+    f3.add(histogramComponent);
+    f3.setSize(256, 1024);
+    f3.setVisible(true);
   }
 }
