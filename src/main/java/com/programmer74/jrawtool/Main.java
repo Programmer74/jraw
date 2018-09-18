@@ -124,7 +124,7 @@ public class Main{
 
     JFrame f3 = new JFrame("Histogram");
     f3.add(histogramComponent);
-    f3.setSize(256, 1024);
+    f3.setSize(256, 512);
     f3.setVisible(true);
   }
 }

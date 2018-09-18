@@ -10,6 +10,8 @@ public class HistogramComponent extends Component {
   int[] bPixelsCount = new int[256];
   int[] wPixelsCount = new int[256];
 
+  static final int histogramHeight = 128;
+
   public HistogramComponent(DoubleImage image) {
     image.setHistogramComponent(this);
   }
@@ -37,7 +39,7 @@ public class HistogramComponent extends Component {
   }
 
   @Override public void paint(final Graphics g) {
-    g.clearRect(0, 0, 256, 1024);
+    g.clearRect(0, 0, 256, histogramHeight * 4);
 
     int maxW = 0;
     int maxR = 0;
@@ -51,22 +53,22 @@ public class HistogramComponent extends Component {
     }
 
     g.setColor(Color.BLACK);
-    g.fillRect(0,0, 256, 1024);
+    g.fillRect(0,0, 256, histogramHeight * 4);
 
     for (int i = 0; i < 256; i++) {
-      int wHeight = (int)(wPixelsCount[i] * 256.0 / maxW);
-      int rHeight = (int)(rPixelsCount[i] * 256.0 / maxR);
-      int gHeight = (int)(gPixelsCount[i] * 256.0 / maxG);
-      int bHeight = (int)(bPixelsCount[i] * 256.0 / maxB);
+      int wHeight = (int)(wPixelsCount[i] * 1.0 * histogramHeight / maxW);
+      int rHeight = (int)(rPixelsCount[i] * 1.0 * histogramHeight / maxR);
+      int gHeight = (int)(gPixelsCount[i] * 1.0 * histogramHeight / maxG);
+      int bHeight = (int)(bPixelsCount[i] * 1.0 * histogramHeight / maxB);
 
       g.setColor(Color.WHITE);
-      g.fillRect(i, 256 - wHeight, 1, wHeight);
+      g.fillRect(i, histogramHeight - wHeight, 1, wHeight);
       g.setColor(Color.RED);
-      g.fillRect(i, 512 - rHeight, 1, rHeight);
+      g.fillRect(i, histogramHeight * 2 - rHeight, 1, rHeight);
       g.setColor(Color.GREEN);
-      g.fillRect(i, 768 - gHeight, 1, gHeight);
+      g.fillRect(i, histogramHeight * 3 - gHeight, 1, gHeight);
       g.setColor(Color.BLUE);
-      g.fillRect(i, 1024 - bHeight, 1, bHeight);
+      g.fillRect(i, histogramHeight * 4 - bHeight, 1, bHeight);
     }
   }
 }
