@@ -45,6 +45,8 @@ public class DoubleImage {
   private Component parent;
   private HistogramComponent histogramComponent;
 
+  private DoubleImageDefaultValues defaultValues = new DoubleImageDefaultValues();
+
   public DoubleImage(final int width, final int height) {
     this.width = width;
     this.height = height;
@@ -308,6 +310,21 @@ public class DoubleImage {
   public void setAfterSlowPreviewRenderingEndCallback(
       final Consumer<Integer> afterSlowPreviewRenderingEndCallback) {
     this.afterSlowPreviewRenderingEndCallback = afterSlowPreviewRenderingEndCallback;
+  }
+
+  public DoubleImageDefaultValues getDefaultValues() {
+    return defaultValues;
+  }
+
+  public void setDefaultValues(DoubleImageDefaultValues defaultValues) {
+    this.defaultValues = defaultValues;
+    this.rWB = defaultValues.getrK();
+    this.gWB = defaultValues.getgK();
+    this.bWB = defaultValues.getbK();
+    this.exposureStop = defaultValues.getExposure();
+    this.brightness = defaultValues.getBrigthness();
+    this.contrast = defaultValues.getContrast();
+    this.gGamma = defaultValues.getGamma();
   }
 
   public void setWhiteBalance(double rK, double gK, double bK) {

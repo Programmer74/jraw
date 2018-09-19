@@ -1,6 +1,7 @@
 package com.programmer74.jrawtool.converters;
 
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
+import com.programmer74.jrawtool.doubleimage.DoubleImageDefaultValues;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageInputStream;
@@ -65,6 +66,14 @@ public class JpegImage {
     jpegImage.convertJpegPixelsToDoublePixels();
     System.out.println("Converting OK");
 
+
+    jpegImage.doubleImage.setDefaultValues(getDefaultValues());
+
     return jpegImage.doubleImage;
+  }
+
+  public static DoubleImageDefaultValues getDefaultValues() {
+    DoubleImageDefaultValues values = new DoubleImageDefaultValues();
+    return values;
   }
 }

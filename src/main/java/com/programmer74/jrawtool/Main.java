@@ -6,6 +6,8 @@ import com.programmer74.jrawtool.converters.JpegImage;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.components.DoubleImageComponent;
 import com.programmer74.jrawtool.converters.PGMImage;
+import com.programmer74.jrawtool.doubleimage.DoubleImageDefaultValues;
+
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -30,6 +32,7 @@ public class Main{
     }
     DoubleImageComponent doubleImageComponent = new DoubleImageComponent(doubleImage);
     HistogramComponent histogramComponent = new HistogramComponent(doubleImage);
+    DoubleImageDefaultValues defaults = doubleImage.getDefaultValues();
 
     JFrame f = new JFrame("Image: " + filename);
     f.addWindowListener(new WindowAdapter() {
@@ -45,15 +48,15 @@ public class Main{
     JFrame f2 = new JFrame("Settings");
     f2.setLayout(new FlowLayout());
 
-    DisplayingSlider redsSlider = new DisplayingSlider("Reds", 0.0, 3.0, 2.17);
-    DisplayingSlider greensSlider = new DisplayingSlider("Greens", 0.0, 3.0, 1.0);
-    DisplayingSlider bluesSlider = new DisplayingSlider("Blue", 0.0, 3.0, 1.163);
+    DisplayingSlider redsSlider = new DisplayingSlider("Reds", 0.0, 3.0, defaults.getrK());
+    DisplayingSlider greensSlider = new DisplayingSlider("Greens", 0.0, 3.0, defaults.getgK());
+    DisplayingSlider bluesSlider = new DisplayingSlider("Blue", 0.0, 3.0, defaults.getbK());
 
 
-    DisplayingSlider gammaSlider = new DisplayingSlider("Gamma", 1.0, 3.0, 2.2222);
-    DisplayingSlider exposureSlider = new DisplayingSlider("Exp", -2.0, 2.0, 0.0);
-    DisplayingSlider brightnessSlider = new DisplayingSlider("Bri", -1.0, 1.0, 0.0);
-    DisplayingSlider contrastSlider = new DisplayingSlider("Con", 0.0, 2.0, 1.0);
+    DisplayingSlider gammaSlider = new DisplayingSlider("Gamma", 0.0, 3.0, defaults.getGamma());
+    DisplayingSlider exposureSlider = new DisplayingSlider("Exp", -2.0, 2.0, defaults.getExposure());
+    DisplayingSlider brightnessSlider = new DisplayingSlider("Bri", -1.0, 1.0, defaults.getBrigthness());
+    DisplayingSlider contrastSlider = new DisplayingSlider("Con", 0.0, 2.0, defaults.getContrast());
 
 
     ChangeListener sliderChangeListeners = new ChangeListener() {

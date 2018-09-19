@@ -1,6 +1,8 @@
 package com.programmer74.jrawtool.converters;
 
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
+import com.programmer74.jrawtool.doubleimage.DoubleImageDefaultValues;
+
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.nio.file.Files;
@@ -163,10 +165,24 @@ public class PGMImage {
     pgmImage.colorizeBayerPixelsToDoublePixels();
     System.out.println("Colorizing OK");
 
+    pgmImage.doubleImage.setDefaultValues(getDefaultValues());
+
     DoubleImage image = pgmImage.doubleImage;
     image.getBufferedImage();
     System.out.println("Converting OK");
 
     return image;
+  }
+
+  public static DoubleImageDefaultValues getDefaultValues() {
+    DoubleImageDefaultValues values = new DoubleImageDefaultValues();
+    values.setrK(2.17);
+    values.setgK(1.0);
+    values.setbK(1.163);
+    values.setGamma(2.2222);
+    values.setExposure(0);
+    values.setBrigthness(0);
+    values.setContrast(1);
+    return values;
   }
 }
