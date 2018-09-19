@@ -1,4 +1,4 @@
-package com.programmer74.jrawtool.pgmimage;
+package com.programmer74.jrawtool.converters;
 
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import java.io.FileNotFoundException;

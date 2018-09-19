@@ -2,9 +2,10 @@ package com.programmer74.jrawtool;
 
 import com.programmer74.jrawtool.components.DisplayingSlider;
 import com.programmer74.jrawtool.components.HistogramComponent;
+import com.programmer74.jrawtool.converters.JpegImage;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.components.DoubleImageComponent;
-import com.programmer74.jrawtool.pgmimage.PGMImage;
+import com.programmer74.jrawtool.converters.PGMImage;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -21,7 +22,12 @@ public class Main{
 
     String filename = args[0];
 
-    DoubleImage doubleImage = PGMImage.loadPicture(filename);
+    DoubleImage doubleImage;
+    if (filename.toLowerCase().endsWith(".jpg")) {
+      doubleImage = JpegImage.loadPicture(filename);
+    } else {
+      doubleImage = PGMImage.loadPicture(filename);
+    }
     DoubleImageComponent doubleImageComponent = new DoubleImageComponent(doubleImage);
     HistogramComponent histogramComponent = new HistogramComponent(doubleImage);
 
