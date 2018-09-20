@@ -45,11 +45,13 @@ public class DoubleImage {
   private Component parent;
   private HistogramComponent histogramComponent;
 
-  private DoubleImageDefaultValues defaultValues = new DoubleImageDefaultValues();
+  private DoubleImageDefaultValues defaultValues;
 
-  public DoubleImage(final int width, final int height) {
+  public DoubleImage(final int width, final int height, final DoubleImageDefaultValues defaultValues) {
     this.width = width;
     this.height = height;
+    this.defaultValues = defaultValues;
+    applyDefaultValues(defaultValues);
     this.pixels = new double[width][height][3];
     this.bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
     this.bufferedImagePreviewFast = new BufferedImage(width / 8, height / 8, BufferedImage.TYPE_INT_RGB);
@@ -178,6 +180,8 @@ public class DoubleImage {
     if (histogramComponent != null) {
       histogramComponent.resetHistogram();
     }
+
+    System.out.println("GAMMA: " + gGamma);
 
     for (int x = 0; x < image.getWidth(); x++) {
       for (int y = 0; y < image.getHeight(); y++) {
@@ -316,15 +320,14 @@ public class DoubleImage {
     return defaultValues;
   }
 
-  public void setDefaultValues(DoubleImageDefaultValues defaultValues) {
-    this.defaultValues = defaultValues;
+  public void applyDefaultValues(DoubleImageDefaultValues defaultValues) {
     this.rWB = defaultValues.getrK();
     this.gWB = defaultValues.getgK();
     this.bWB = defaultValues.getbK();
     this.exposureStop = defaultValues.getExposure();
     this.brightness = defaultValues.getBrigthness();
     this.contrast = defaultValues.getContrast();
-    this.gGamma = defaultValues.getGamma();
+    this.gGamma = 1 / defaultValues.getGamma();
   }
 
   public void setWhiteBalance(double rK, double gK, double bK) {

@@ -1,11 +1,11 @@
 package com.programmer74.jrawtool;
 
 import com.programmer74.jrawtool.components.DisplayingSlider;
+import com.programmer74.jrawtool.components.DoubleImageComponent;
 import com.programmer74.jrawtool.components.HistogramComponent;
 import com.programmer74.jrawtool.converters.JpegImage;
-import com.programmer74.jrawtool.doubleimage.DoubleImage;
-import com.programmer74.jrawtool.components.DoubleImageComponent;
 import com.programmer74.jrawtool.converters.PGMImage;
+import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.doubleimage.DoubleImageDefaultValues;
 
 import javax.swing.*;

@@ -125,7 +125,7 @@ public class PGMImage {
       int maxValue = infile.nextInt();
       System.out.println("Max value: " + maxValue);
       bayerPixels = new int[rows][cols];
-      doubleImage = new DoubleImage(cols, rows);
+      doubleImage = new DoubleImage(cols, rows, getDefaultValues());
       System.out.println("Reading in image from " + filename + " of size " + rows + " by " + cols);
       // process the rest lines that hold the actual pixel values
 
@@ -164,8 +164,6 @@ public class PGMImage {
     //colorize bayer array
     pgmImage.colorizeBayerPixelsToDoublePixels();
     System.out.println("Colorizing OK");
-
-    pgmImage.doubleImage.setDefaultValues(getDefaultValues());
 
     DoubleImage image = pgmImage.doubleImage;
     image.getBufferedImage();

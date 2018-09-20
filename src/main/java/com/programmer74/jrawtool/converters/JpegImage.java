@@ -45,7 +45,7 @@ public class JpegImage {
 
       ImageInputStream iis = ImageIO.createImageInputStream(new FileInputStream(filename));
       bufferedImage = ImageIO.read(iis);
-      doubleImage = new DoubleImage(bufferedImage.getWidth(), bufferedImage.getHeight());
+      doubleImage = new DoubleImage(bufferedImage.getWidth(), bufferedImage.getHeight(), getDefaultValues());
       System.out.println("Reading in image from " + filename +
           " of size " + bufferedImage.getWidth() + " by " + bufferedImage.getHeight());
 
@@ -65,9 +65,6 @@ public class JpegImage {
 
     jpegImage.convertJpegPixelsToDoublePixels();
     System.out.println("Converting OK");
-
-
-    jpegImage.doubleImage.setDefaultValues(getDefaultValues());
 
     return jpegImage.doubleImage;
   }
