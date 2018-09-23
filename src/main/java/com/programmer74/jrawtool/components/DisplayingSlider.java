@@ -79,4 +79,8 @@ public class DisplayingSlider extends JPanel {
   public void setSliderChangeListener(final ChangeListener sliderChangeListener) {
     this.sliderChangeListener = sliderChangeListener;
   }
+
+  public double getDefaultValue() {
+    return defaultValue;
+  }
 }

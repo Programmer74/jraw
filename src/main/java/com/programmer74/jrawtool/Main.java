@@ -100,6 +100,23 @@ public class Main{
     contrastSlider.setSliderChangeListener(sliderChangeListeners);
     f2.add(contrastSlider);
 
+    DisplayingSlider wbSlider = new DisplayingSlider("WB", -1.0, 1.0, 0.0);
+    wbSlider.setSliderChangeListener((e) -> {
+      double wb = wbSlider.getValue();
+      redsSlider.setValue(redsSlider.getDefaultValue() - wb);
+      bluesSlider.setValue(bluesSlider.getDefaultValue() + wb);
+    });
+    f2.add(wbSlider);
+
+    DisplayingSlider tintSlider = new DisplayingSlider("Tint", -1.0, 1.0, 0.0);
+    tintSlider.setSliderChangeListener((e) -> {
+      double tint = tintSlider.getValue();
+      redsSlider.setValue(redsSlider.getDefaultValue() + tint / 3);
+      greensSlider.setValue(greensSlider.getDefaultValue() - tint * 2 / 3);
+      bluesSlider.setValue(bluesSlider.getDefaultValue() + tint / 3);
+    });
+    f2.add(tintSlider);
+
     f2.setSize(320, 480);
     f2.setVisible(true);
 
