@@ -3,8 +3,6 @@ package com.programmer74.jrawtool.doubleimage;
 import com.programmer74.jrawtool.components.HistogramComponent;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 public class DoubleImage {
@@ -132,6 +130,31 @@ public class DoubleImage {
     }
   }
 
+  protected void applyConvolution(double[] pixel, int x, int y, int width, int height) {
+    double[] convMatrix = {0, -1, 0, -1, 5, -1, 0, -1, 0};
+    double[] acc = {0, 0, 0};
+
+    for (int dx = 0; dx <= 2; dx++) {
+      for (int dy = 0; dy <= 2; dy++) {
+        int sourceX = x - 1 + dx;
+        int sourceY = y - 1 + dy;
+        if (sourceX < 0) sourceX = 0;
+        if (sourceX >= width) sourceX = width - 1;
+        if (sourceY < 0) sourceY = 0;
+        if (sourceY >= height) sourceY = height - 1;
+
+        for (int colorIndex = 0; colorIndex <= 2; colorIndex++) {
+          double[] sourcePixel = pixels[sourceX][sourceY].clone();
+          adjustPixelParams(sourcePixel);
+          acc[colorIndex] += sourcePixel[colorIndex] * convMatrix[dx * 3 + dy];
+        }
+      }
+    }
+    for (int colorIndex = 0; colorIndex <= 2; colorIndex++) {
+      pixel[colorIndex] = acc[colorIndex];
+    }
+  }
+
   private void markSlowPreviewDirty() {
     isSlowPreviewDirty = true;
     isSlowPreviewReady = false;
@@ -154,8 +177,8 @@ public class DoubleImage {
                                    final int offsetX, final int offsetY, final int width, final int height) {
    for (int x = offsetX; x < offsetX + width; x++) {
       for (int y = offsetY; y < offsetY + height; y++) {
-        double[] pixel = pixels[x][y].clone();
 
+        double[] pixel = pixels[x][y].clone();
         adjustPixelParams(pixel);
 
         int r = doubleValueToUint8T(pixel[0]);
@@ -193,8 +216,8 @@ public class DoubleImage {
         if (sy >= height) sy = height - 1;
 
         double[] pixel = pixels[sx][sy].clone();
-
         adjustPixelParams(pixel);
+        //applyConvolution(pixel, sx, sy, width, height);
 
         int r = doubleValueToUint8T(pixel[0]);
         int g = doubleValueToUint8T(pixel[1]);

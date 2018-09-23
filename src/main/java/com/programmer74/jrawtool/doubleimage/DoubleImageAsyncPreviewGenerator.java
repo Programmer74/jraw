@@ -67,8 +67,8 @@ public class DoubleImageAsyncPreviewGenerator {
           paintingShouldStop = false;
           return;
         }
-        double[] pixel = parent.pixels[fromX][fromY].clone();
 
+        double[] pixel = parent.pixels[fromX][fromY].clone();
         parent.adjustPixelParams(pixel);
 
         int r = parent.doubleValueToUint8T(pixel[0]);
