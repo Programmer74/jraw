@@ -166,7 +166,7 @@ public class PGMImage {
     System.out.println("Colorizing OK");
 
     DoubleImage image = pgmImage.doubleImage;
-    image.getBufferedImage();
+//    image.getBufferedImage();
     System.out.println("Converting OK");
 
     return image;

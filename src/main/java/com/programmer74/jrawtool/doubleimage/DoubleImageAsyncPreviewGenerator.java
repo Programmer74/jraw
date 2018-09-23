@@ -69,7 +69,8 @@ public class DoubleImageAsyncPreviewGenerator {
         }
 
         double[] pixel = parent.pixels[fromX][fromY].clone();
-        parent.adjustPixelParams(pixel);
+        //parent.adjustPixelParams(pixel);
+        parent.applyConvolution(pixel, fromX, fromY);
 
         int r = parent.doubleValueToUint8T(pixel[0]);
         int g = parent.doubleValueToUint8T(pixel[1]);

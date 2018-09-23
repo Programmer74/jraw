@@ -130,7 +130,7 @@ public class DoubleImage {
     }
   }
 
-  protected void applyConvolution(double[] pixel, int x, int y, int width, int height) {
+  protected void applyConvolution(final double[] pixel, final int x, final int y) {
     double[] convMatrix = {0, -1, 0, -1, 5, -1, 0, -1, 0};
     double[] acc = {0, 0, 0};
 
@@ -179,7 +179,8 @@ public class DoubleImage {
       for (int y = offsetY; y < offsetY + height; y++) {
 
         double[] pixel = pixels[x][y].clone();
-        adjustPixelParams(pixel);
+        //adjustPixelParams(pixel);
+        applyConvolution(pixel, x, y);
 
         int r = doubleValueToUint8T(pixel[0]);
         int g = doubleValueToUint8T(pixel[1]);
@@ -216,8 +217,8 @@ public class DoubleImage {
         if (sy >= height) sy = height - 1;
 
         double[] pixel = pixels[sx][sy].clone();
-        adjustPixelParams(pixel);
-        //applyConvolution(pixel, sx, sy, width, height);
+        //adjustPixelParams(pixel);
+        applyConvolution(pixel, sx, sy);
 
         int r = doubleValueToUint8T(pixel[0]);
         int g = doubleValueToUint8T(pixel[1]);
@@ -237,13 +238,13 @@ public class DoubleImage {
     }
   }
 
-  public BufferedImage getBufferedImage() {
-    if (isDirty) {
-      paintOnBufferedImage(bufferedImage);
-      isDirty = false;
-    }
-    return bufferedImage;
-  }
+//  public BufferedImage getBufferedImage() {
+//    if (isDirty) {
+//      paintOnBufferedImage(bufferedImage);
+//      isDirty = false;
+//    }
+//    return bufferedImage;
+//  }
 
   private void applyPreviewCoordinates(
       int paintX, int paintY, int paintW, int paintH,
