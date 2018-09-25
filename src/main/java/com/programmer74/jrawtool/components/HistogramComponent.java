@@ -16,6 +16,10 @@ public class HistogramComponent extends Component {
     image.setHistogramComponent(this);
   }
 
+  public int[] getwPixelsCount() {
+    return wPixelsCount;
+  }
+
   public void resetHistogram() {
     for (int i = 0; i < 256; i++) {
       rPixelsCount[i] = 0;

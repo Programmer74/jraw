@@ -1,9 +1,11 @@
 package com.programmer74.jrawtool.doubleimage;
 
+import com.programmer74.jrawtool.components.CurvesComponent;
 import com.programmer74.jrawtool.components.HistogramComponent;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class DoubleImage {
   //x,y,{r,g,bufferedImage}
@@ -45,6 +47,8 @@ public class DoubleImage {
 
   private DoubleImageDefaultValues defaultValues;
 
+  private Function<Double, Integer> customPixelConverter = null;
+
   public DoubleImage(final int width, final int height, final DoubleImageDefaultValues defaultValues) {
     this.width = width;
     this.height = height;
@@ -63,6 +67,17 @@ public class DoubleImage {
   public void setHistogramComponent(
       final HistogramComponent histogramComponent) {
     this.histogramComponent = histogramComponent;
+  }
+
+  public void setCustomPixelConverter(
+      final Function<Double, Integer> customPixelConverter) {
+    this.customPixelConverter = customPixelConverter;
+    markDirty();
+  }
+
+  public void setDefaultPixelConverter() {
+    this.customPixelConverter = null;
+    markDirty();
   }
 
   public int getWidth() {
@@ -84,12 +99,15 @@ public class DoubleImage {
   }
 
   protected int doubleValueToUint8T(Double value) {
-    value = value * 255.0;
-    //    System.out.println(value);
-    int intval = value.intValue();
-    if (intval > 255) intval = 255;
-    if (intval < 0) intval = 0;
-    return intval;
+    if (customPixelConverter != null) {
+      return customPixelConverter.apply(value);
+    } else {
+      value = value * 255.0;
+      int intval = value.intValue();
+      if (intval > 255) intval = 255;
+      if (intval < 0) intval = 0;
+      return intval;
+    }
   }
 
   private double calculateGammaCorrection(double input, double A, double gamma) {
@@ -130,29 +148,60 @@ public class DoubleImage {
     }
   }
 
-  protected void applyConvolution(final double[] pixel, final int x, final int y) {
-    double[] convMatrix = {0, -1, 0, -1, 5, -1, 0, -1, 0};
-    double[] acc = {0, 0, 0};
+  protected void applyConvolution(final double[] pixel,
+      final int x, final int y,
+      final double[][] convMatrix, final double convMatrixDivider,
+      final double strength) {
+    int a = convMatrix[0].length;
+    for (int colorIndex = 0; colorIndex <= 2; colorIndex++) {
+      double acc = 0;
+      for (int dx = 0; dx < a; dx++) {
+        for (int dy = 0; dy < a; dy++) {
+          int sourceX = x - a / 2 + dx;
+          int sourceY = y - a / 2 + dy;
+          if (sourceX < 0) sourceX = 0;
+          if (sourceX >= width) sourceX = width - 1;
+          if (sourceY < 0) sourceY = 0;
+          if (sourceY >= height) sourceY = height - 1;
 
-    for (int dx = 0; dx <= 2; dx++) {
-      for (int dy = 0; dy <= 2; dy++) {
-        int sourceX = x - 1 + dx;
-        int sourceY = y - 1 + dy;
-        if (sourceX < 0) sourceX = 0;
-        if (sourceX >= width) sourceX = width - 1;
-        if (sourceY < 0) sourceY = 0;
-        if (sourceY >= height) sourceY = height - 1;
-
-        for (int colorIndex = 0; colorIndex <= 2; colorIndex++) {
-          double[] sourcePixel = pixels[sourceX][sourceY].clone();
-          adjustPixelParams(sourcePixel);
-          acc[colorIndex] += sourcePixel[colorIndex] * convMatrix[dx * 3 + dy];
+          acc += pixels[sourceX][sourceY][colorIndex] * convMatrix[dx][dy];
         }
       }
+      pixel[colorIndex] = acc / convMatrixDivider * strength + pixel[colorIndex] * (1 - strength);
     }
-    for (int colorIndex = 0; colorIndex <= 2; colorIndex++) {
-      pixel[colorIndex] = acc[colorIndex];
-    }
+  }
+
+  protected void adjustSharpness(final double[] pixel, final int x, final int y) {
+    final double[][] sharpnessConvMatrix = {{0, -1, 0}, {-1, 5, -1}, {0, -1, 0}};
+    final double matrixDivider = 1.0;
+    applyConvolution(pixel, x, y, sharpnessConvMatrix, matrixDivider,  1.0);
+  }
+
+  protected void adjustGaussianBlur(final double[] pixel, final int x, final int y) {
+    final double[][] gaussianConvMatrix = {
+        {1, 4, 6, 4, 1},
+        {4, 16, 24, 16, 4},
+        {6, 24, 36, 24, 6},
+        {4, 16, 24, 16, 4},
+        {1, 4, 6, 4, 1}
+    };
+    final double matrixDivider = 256.0;
+    applyConvolution(pixel, x, y, gaussianConvMatrix, matrixDivider,  1.0);
+  }
+
+  protected void adjustUnsharpMasking(final double[] pixel, final int x, final int y) {
+    final double[][] unsharpnessMaskingConvMatrix = {
+        {1, 4, 6, 4, 1},
+        {4, 16, 24, 16, 4},
+        {6, 24, -476, 24, 6},
+        {4, 16, 24, 16, 4},
+        {1, 4, 6, 4, 1}
+    };
+    //1) calculate gaussian matrix
+    //2) divider = -divider
+    //3) mid_value = (divider * 2) + mid_value
+    final double matrixDivider = -256.0;
+    applyConvolution(pixel, x, y, unsharpnessMaskingConvMatrix, matrixDivider,  1.0);
   }
 
   private void markSlowPreviewDirty() {
@@ -165,38 +214,45 @@ public class DoubleImage {
     isFastPreviewDirty = true;
   }
 
-  private void markDirty() {
+  public void markDirty() {
     markPreviewDirty();
     isDirty = true;
   }
-
-  public void paintOnBufferedImage(BufferedImage image) {
-    paintOnBufferedImage(image, 0, 0, width, height);
-  }
-  public void paintOnBufferedImage(final BufferedImage image,
-                                   final int offsetX, final int offsetY, final int width, final int height) {
-   for (int x = offsetX; x < offsetX + width; x++) {
-      for (int y = offsetY; y < offsetY + height; y++) {
-
-        double[] pixel = pixels[x][y].clone();
-        //adjustPixelParams(pixel);
-        applyConvolution(pixel, x, y);
-
-        int r = doubleValueToUint8T(pixel[0]);
-        int g = doubleValueToUint8T(pixel[1]);
-        int b = doubleValueToUint8T(pixel[2]);
-
-        int rgbcolor = 0xff000000 | r << 16 | g << 8 | b;
-        image.setRGB(x, y, rgbcolor);
-      }
-    }
-  }
+//
+//  public void paintOnBufferedImage(BufferedImage image) {
+//    paintOnBufferedImage(image, 0, 0, width, height);
+//  }
+//  public void paintOnBufferedImage(final BufferedImage image,
+//                                   final int offsetX, final int offsetY, final int width, final int height) {
+//   for (int x = offsetX; x < offsetX + width; x++) {
+//      for (int y = offsetY; y < offsetY + height; y++) {
+//
+//        double[] pixel = pixels[x][y].clone();
+//        //adjustPixelParams(pixel);
+//        applyConvolution(pixel, x, y);
+//
+//        int r = doubleValueToUint8T(pixel[0]);
+//        int g = doubleValueToUint8T(pixel[1]);
+//        int b = doubleValueToUint8T(pixel[2]);
+//
+//        int rgbcolor = 0xff000000 | r << 16 | g << 8 | b;
+//        image.setRGB(x, y, rgbcolor);
+//      }
+//    }
+//  }
 
   protected void adjustPixelParams(double[] pixel) {
     adjustWhiteBalance(pixel);
     adjustGamma(pixel);
     adjustExposure(pixel);
     adjustBrightnessContrast(pixel);
+  }
+
+  protected void adjustPixelConvolutions(double[] pixel, int x, int y) {
+    //do nothing for now
+//    adjustSharpness(pixel, x, y);
+//    adjustGaussianBlur(pixel, x, y);
+//    adjustUnsharpMasking(pixel, x, y);
   }
 
   public void paintFastPreviewOnSmallerBufferedImage(BufferedImage image, int lx, int ly, int rx, int ry) {
@@ -217,8 +273,9 @@ public class DoubleImage {
         if (sy >= height) sy = height - 1;
 
         double[] pixel = pixels[sx][sy].clone();
-        //adjustPixelParams(pixel);
-        applyConvolution(pixel, sx, sy);
+
+        adjustPixelConvolutions(pixel, sx, sy);
+        adjustPixelParams(pixel);
 
         int r = doubleValueToUint8T(pixel[0]);
         int g = doubleValueToUint8T(pixel[1]);

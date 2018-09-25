@@ -1,5 +1,6 @@
 package com.programmer74.jrawtool;
 
+import com.programmer74.jrawtool.components.CurvesComponent;
 import com.programmer74.jrawtool.components.DisplayingSlider;
 import com.programmer74.jrawtool.components.DoubleImageComponent;
 import com.programmer74.jrawtool.components.HistogramComponent;
@@ -12,6 +13,8 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -150,7 +153,32 @@ public class Main{
 
     JFrame f3 = new JFrame("Histogram");
     f3.add(histogramComponent);
-    f3.setSize(256, 512);
+    f3.setSize(256, 542);
     f3.setVisible(true);
+
+    Checkbox chbCurvesEnabled = new Checkbox();
+    chbCurvesEnabled.setLabel("Enable curves");
+
+    CurvesComponent curvesComponent = new CurvesComponent(histogramComponent);
+    curvesComponent.setOnChangeCallback((e) -> {
+      if (chbCurvesEnabled.getState()) {
+        doubleImage.setCustomPixelConverter(curvesComponent.getPixelConverter());
+      } else {
+        doubleImage.setDefaultPixelConverter();
+      }
+      f.repaint();
+    });
+
+    JFrame f4 = new JFrame("Curves");
+    f4.add(curvesComponent);
+    f4.setSize(256, 286);
+    f4.setVisible(true);
+
+    chbCurvesEnabled.addItemListener(new ItemListener() {
+      @Override public void itemStateChanged(final ItemEvent itemEvent) {
+        curvesComponent.getOnChangeCallback().accept(0);
+      }
+    });
+    f2.add(chbCurvesEnabled);
   }
 }
