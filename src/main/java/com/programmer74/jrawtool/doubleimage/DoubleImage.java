@@ -185,28 +185,28 @@ public class DoubleImage {
     markPreviewDirty();
     isDirty = true;
   }
-//
-//  public void paintOnBufferedImage(BufferedImage image) {
-//    paintOnBufferedImage(image, 0, 0, width, height);
-//  }
-//  public void paintOnBufferedImage(final BufferedImage image,
-//                                   final int offsetX, final int offsetY, final int width, final int height) {
-//   for (int x = offsetX; x < offsetX + width; x++) {
-//      for (int y = offsetY; y < offsetY + height; y++) {
-//
-//        double[] pixel = pixels[x][y].clone();
-//        //adjustPixelParams(pixel);
-//        applyConvolution(pixel, x, y);
-//
-//        int r = doubleValueToUint8T(pixel[0]);
-//        int g = doubleValueToUint8T(pixel[1]);
-//        int b = doubleValueToUint8T(pixel[2]);
-//
-//        int rgbcolor = 0xff000000 | r << 16 | g << 8 | b;
-//        image.setRGB(x, y, rgbcolor);
-//      }
-//    }
-//  }
+
+  public void paintOnBufferedImage(BufferedImage image) {
+    paintOnBufferedImage(image, 0, 0, width, height);
+  }
+  private void paintOnBufferedImage(final BufferedImage image,
+                                   final int offsetX, final int offsetY, final int width, final int height) {
+   for (int x = offsetX; x < offsetX + width; x++) {
+      for (int y = offsetY; y < offsetY + height; y++) {
+
+        double[] pixel = pixels[x][y].clone();
+        adjustPixelParams(pixel);
+        //applyConvolution(pixel, x, y);
+
+        int r = doubleValueToUint8T(pixel[0]);
+        int g = doubleValueToUint8T(pixel[1]);
+        int b = doubleValueToUint8T(pixel[2]);
+
+        int rgbcolor = 0xff000000 | r << 16 | g << 8 | b;
+        image.setRGB(x, y, rgbcolor);
+      }
+    }
+  }
 
   protected void adjustPixelParams(double[] pixel) {
     adjustWhiteBalance(pixel);
@@ -247,7 +247,7 @@ public class DoubleImage {
     final double sharpnessMatrixDivider = 1.0;
     //applyConvolution(pixel, x, y, unsharpnessMaskingConvMatrix, unsharpnessMaskingMatrixDivider,  1.0);
     //applyConvolution(pixel, x, y, defaultConvMatrix, defaultConvMatrixDivider,  1.0);
-    applyConvolution(pixel, x, y, gaussianConvMatrix, gaussianMatrixDivider,  1.0);
+//    applyConvolution(pixel, x, y, gaussianConvMatrix, gaussianMatrixDivider,  1.0);
   }
 
   public void paintFastPreviewOnSmallerBufferedImage(BufferedImage image, int lx, int ly, int rx, int ry) {
@@ -290,13 +290,13 @@ public class DoubleImage {
     }
   }
 
-//  public BufferedImage getBufferedImage() {
-//    if (isDirty) {
-//      paintOnBufferedImage(bufferedImage);
-//      isDirty = false;
-//    }
-//    return bufferedImage;
-//  }
+  public BufferedImage getBufferedImage() {
+    if (isDirty) {
+      paintOnBufferedImage(bufferedImage);
+      isDirty = false;
+    }
+    return bufferedImage;
+  }
 
   private void applyPreviewCoordinates(
       int paintX, int paintY, int paintW, int paintH,

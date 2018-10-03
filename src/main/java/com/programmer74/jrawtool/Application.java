@@ -8,6 +8,7 @@ import com.programmer74.jrawtool.doubleimage.DoubleImageDefaultValues;
 import com.programmer74.jrawtool.forms.AdjustmentsForm;
 import com.programmer74.jrawtool.forms.CurvesForm;
 import com.programmer74.jrawtool.forms.HistogramForm;
+import com.programmer74.jrawtool.forms.MenuForm;
 import com.programmer74.jrawtool.forms.PreviewForm;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -18,18 +19,28 @@ public class Application {
   private AdjustmentsForm adjustmentsForm = null;
   private HistogramForm histogramForm = null;
   private CurvesForm curvesForm = null;
+  private MenuForm menuForm;
+
+  public Application() {
+    menuForm = new MenuForm(null, this);
+    menuForm.showForm();
+  }
+
+  public void closeApplication() {
+    previewForm.setVisible(false);
+    previewForm.dispose();
+    adjustmentsForm.setVisible(false);
+    adjustmentsForm.dispose();
+    histogramForm.setVisible(false);
+    histogramForm.dispose();
+    curvesForm.setVisible(false);
+    curvesForm.dispose();
+  }
 
   public void loadApplication(String filename) {
 
     if (previewForm != null) {
-      previewForm.setVisible(false);
-      previewForm.dispose();
-      adjustmentsForm.setVisible(false);
-      adjustmentsForm.dispose();
-      histogramForm.setVisible(false);
-      histogramForm.dispose();
-      curvesForm.setVisible(false);
-      curvesForm.dispose();
+      closeApplication();
     }
 
     DoubleImage doubleImage;
@@ -40,12 +51,13 @@ public class Application {
     }
     DoubleImageComponent doubleImageComponent = new DoubleImageComponent(doubleImage);
 
-    previewForm = new PreviewForm(doubleImageComponent, filename);
+    previewForm = new PreviewForm(this, doubleImageComponent, filename);
     adjustmentsForm = new AdjustmentsForm(doubleImageComponent, doubleImage);
     histogramForm = new HistogramForm(doubleImage);
     curvesForm = new CurvesForm(
         doubleImage, histogramForm.getHistogramComponent(), adjustmentsForm, previewForm
     );
+    menuForm.setDoubleImage(doubleImage);
 
     doubleImageComponent.addMouseListener(new MouseAdapter() {
       @Override public void mouseClicked(final MouseEvent e) {
@@ -87,6 +99,6 @@ public class Application {
     String filename = args[0];
 
     Application application = new Application();
-    application.loadApplication(filename);
+    //application.loadApplication(filename);
   }
 }
