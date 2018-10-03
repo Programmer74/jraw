@@ -64,11 +64,11 @@ public class CurvesComponent extends Component {
           } else {
             points.add(new Point(e.getX(), e.getY()));
             sortPoints();
-            repaint();
           }
-        }
-        if (onChangeCallback != null) {
-          onChangeCallback.accept(0);
+          repaint();
+          if (onChangeCallback != null) {
+            onChangeCallback.accept(0);
+          }
         }
       }
 
