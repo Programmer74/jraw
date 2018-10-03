@@ -83,4 +83,8 @@ public class DisplayingSlider extends JPanel {
   public double getDefaultValue() {
     return defaultValue;
   }
+
+  public JSlider getSlider() {
+    return slider;
+  }
 }

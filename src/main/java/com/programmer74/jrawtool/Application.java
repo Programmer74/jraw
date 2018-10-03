@@ -1,9 +1,6 @@
 package com.programmer74.jrawtool;
 
-import com.programmer74.jrawtool.components.CurvesComponent;
-import com.programmer74.jrawtool.components.DisplayingSlider;
 import com.programmer74.jrawtool.components.DoubleImageComponent;
-import com.programmer74.jrawtool.components.HistogramComponent;
 import com.programmer74.jrawtool.converters.JpegImage;
 import com.programmer74.jrawtool.converters.PGMImage;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
@@ -12,24 +9,28 @@ import com.programmer74.jrawtool.forms.AdjustmentsForm;
 import com.programmer74.jrawtool.forms.CurvesForm;
 import com.programmer74.jrawtool.forms.HistogramForm;
 import com.programmer74.jrawtool.forms.PreviewForm;
-
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import java.awt.*;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
-public class Main{
+public class Application {
 
-  //./dcraw -4 -D -v -c DSC_1801.NEF > file
-  public static void main(String[] args) {
+  private PreviewForm previewForm = null;
+  private AdjustmentsForm adjustmentsForm = null;
+  private HistogramForm histogramForm = null;
+  private CurvesForm curvesForm = null;
 
-    String filename = args[0];
+  public void loadApplication(String filename) {
+
+    if (previewForm != null) {
+      previewForm.setVisible(false);
+      previewForm.dispose();
+      adjustmentsForm.setVisible(false);
+      adjustmentsForm.dispose();
+      histogramForm.setVisible(false);
+      histogramForm.dispose();
+      curvesForm.setVisible(false);
+      curvesForm.dispose();
+    }
 
     DoubleImage doubleImage;
     if (filename.toLowerCase().endsWith(".jpg")) {
@@ -39,12 +40,10 @@ public class Main{
     }
     DoubleImageComponent doubleImageComponent = new DoubleImageComponent(doubleImage);
 
-    DoubleImageDefaultValues defaults = doubleImage.getDefaultValues();
-
-    PreviewForm previewForm = new PreviewForm(doubleImageComponent, filename);
-    AdjustmentsForm adjustmentsForm = new AdjustmentsForm(doubleImageComponent, doubleImage);
-    HistogramForm histogramForm = new HistogramForm(doubleImage);
-    CurvesForm curvesForm = new CurvesForm(
+    previewForm = new PreviewForm(doubleImageComponent, filename);
+    adjustmentsForm = new AdjustmentsForm(doubleImageComponent, doubleImage);
+    histogramForm = new HistogramForm(doubleImage);
+    curvesForm = new CurvesForm(
         doubleImage, histogramForm.getHistogramComponent(), adjustmentsForm, previewForm
     );
 
@@ -80,5 +79,14 @@ public class Main{
     adjustmentsForm.showForm();
     histogramForm.showForm();
     curvesForm.showForm();
+  }
+
+  //./dcraw -4 -D -v -c DSC_1801.NEF > file
+  public static void main(String[] args) {
+
+    String filename = args[0];
+
+    Application application = new Application();
+    application.loadApplication(filename);
   }
 }

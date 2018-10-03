@@ -171,39 +171,6 @@ public class DoubleImage {
     }
   }
 
-  protected void adjustSharpness(final double[] pixel, final int x, final int y) {
-    final double[][] sharpnessConvMatrix = {{0, -1, 0}, {-1, 5, -1}, {0, -1, 0}};
-    final double matrixDivider = 1.0;
-    applyConvolution(pixel, x, y, sharpnessConvMatrix, matrixDivider,  1.0);
-  }
-
-  protected void adjustGaussianBlur(final double[] pixel, final int x, final int y) {
-    final double[][] gaussianConvMatrix = {
-        {1, 4, 6, 4, 1},
-        {4, 16, 24, 16, 4},
-        {6, 24, 36, 24, 6},
-        {4, 16, 24, 16, 4},
-        {1, 4, 6, 4, 1}
-    };
-    final double matrixDivider = 256.0;
-    applyConvolution(pixel, x, y, gaussianConvMatrix, matrixDivider,  1.0);
-  }
-
-  protected void adjustUnsharpMasking(final double[] pixel, final int x, final int y) {
-    final double[][] unsharpnessMaskingConvMatrix = {
-        {1, 4, 6, 4, 1},
-        {4, 16, 24, 16, 4},
-        {6, 24, -476, 24, 6},
-        {4, 16, 24, 16, 4},
-        {1, 4, 6, 4, 1}
-    };
-    //1) calculate gaussian matrix
-    //2) divider = -divider
-    //3) mid_value = (divider * 2) + mid_value
-    final double matrixDivider = -256.0;
-    applyConvolution(pixel, x, y, unsharpnessMaskingConvMatrix, matrixDivider,  1.0);
-  }
-
   private void markSlowPreviewDirty() {
     isSlowPreviewDirty = true;
     isSlowPreviewReady = false;
@@ -249,10 +216,38 @@ public class DoubleImage {
   }
 
   protected void adjustPixelConvolutions(double[] pixel, int x, int y) {
-    //do nothing for now
-//    adjustSharpness(pixel, x, y);
-//    adjustGaussianBlur(pixel, x, y);
-//    adjustUnsharpMasking(pixel, x, y);
+    final double[][] defaultConvMatrix = {
+        {0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0},
+        {0, 0, 1, 0, 0},
+        {0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0}
+    };
+    final double defaultConvMatrixDivider = 1.0;
+    final double[][] unsharpnessMaskingConvMatrix = {
+        {1, 4, 6, 4, 1},
+        {4, 16, 24, 16, 4},
+        {6, 24, -476, 24, 6},
+        {4, 16, 24, 16, 4},
+        {1, 4, 6, 4, 1}
+    };
+    //1) calculate gaussian matrix
+    //2) divider = -divider
+    //3) mid_value = (divider * 2) + mid_value
+    final double unsharpnessMaskingMatrixDivider = -256.0;
+    final double[][] gaussianConvMatrix = {
+        {1, 4, 6, 4, 1},
+        {4, 16, 24, 16, 4},
+        {6, 24, 36, 24, 6},
+        {4, 16, 24, 16, 4},
+        {1, 4, 6, 4, 1}
+    };
+    final double gaussianMatrixDivider = 256.0;
+    final double[][] sharpnessConvMatrix = {{0, -1, 0}, {-1, 5, -1}, {0, -1, 0}};
+    final double sharpnessMatrixDivider = 1.0;
+    //applyConvolution(pixel, x, y, unsharpnessMaskingConvMatrix, unsharpnessMaskingMatrixDivider,  1.0);
+    //applyConvolution(pixel, x, y, defaultConvMatrix, defaultConvMatrixDivider,  1.0);
+    applyConvolution(pixel, x, y, gaussianConvMatrix, gaussianMatrixDivider,  1.0);
   }
 
   public void paintFastPreviewOnSmallerBufferedImage(BufferedImage image, int lx, int ly, int rx, int ry) {
