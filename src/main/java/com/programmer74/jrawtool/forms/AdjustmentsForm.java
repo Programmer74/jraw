@@ -1,9 +1,12 @@
 package com.programmer74.jrawtool.forms;
 
+import com.programmer74.jrawtool.components.CurvesComponent;
 import com.programmer74.jrawtool.components.DisplayingSlider;
 import com.programmer74.jrawtool.components.DoubleImageComponent;
+import com.programmer74.jrawtool.components.HistogramComponent;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.doubleimage.DoubleImageDefaultValues;
+import com.programmer74.jrawtool.doubleimage.DoubleImageKernelMatrixGenerator;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -16,18 +19,26 @@ public class AdjustmentsForm extends JFrame {
   private DoubleImageComponent doubleImageComponent;
   private DoubleImage doubleImage;
 
+  private CurvesComponent curvesComponent;
+
   private DisplayingSlider redsSlider;
   private DisplayingSlider greensSlider;
   private DisplayingSlider bluesSlider;
 
   private Checkbox chbCurvesEnabled;
+  private Checkbox chbConvolutionsEnabled;
+
+  JTabbedPane tabPane;
+  private JPanel colorsPanel;
+  private JPanel curvesPanel;
+  private JPanel filtersPanel;
 
   double wbRedsSliderDefVal = 0;
   double wbGreensSliderDefVal = 0;
   double wbBluesSliderDefVal = 0;
 
   public AdjustmentsForm(final DoubleImageComponent doubleImageComponent,
-      final DoubleImage doubleImage) {
+      final DoubleImage doubleImage, final HistogramComponent histogramComponent) {
     super("Adjustments");
 
     this.doubleImage = doubleImage;
@@ -67,26 +78,29 @@ public class AdjustmentsForm extends JFrame {
       }
     };
 
+    colorsPanel = new JPanel();
+    colorsPanel.setLayout(new BoxLayout(colorsPanel, BoxLayout.PAGE_AXIS));
+
     redsSlider.setSliderChangeListener(sliderChangeListeners);
-    add(redsSlider);
+    colorsPanel.add(redsSlider);
 
     greensSlider.setSliderChangeListener(sliderChangeListeners);
-    add(greensSlider);
+    colorsPanel.add(greensSlider);
 
     bluesSlider.setSliderChangeListener(sliderChangeListeners);
-    add(bluesSlider);
+    colorsPanel.add(bluesSlider);
 
     gammaSlider.setSliderChangeListener(sliderChangeListeners);
-    add(gammaSlider);
+    colorsPanel.add(gammaSlider);
 
     exposureSlider.setSliderChangeListener(sliderChangeListeners);
-    add(exposureSlider);
+    colorsPanel.add(exposureSlider);
 
     brightnessSlider.setSliderChangeListener(sliderChangeListeners);
-    add(brightnessSlider);
+    colorsPanel.add(brightnessSlider);
 
     contrastSlider.setSliderChangeListener(sliderChangeListeners);
-    add(contrastSlider);
+    colorsPanel.add(contrastSlider);
 
     DisplayingSlider wbSlider = new DisplayingSlider("WB", -1.0, 1.0, 0.0);
 
@@ -97,7 +111,7 @@ public class AdjustmentsForm extends JFrame {
         bluesSlider.setValue(getWbBluesSliderDefVal() + wb);
       }
     });
-    add(wbSlider);
+    colorsPanel.add(wbSlider);
 
     DisplayingSlider tintSlider = new DisplayingSlider("Tint", -1.0, 1.0, 0.0);
     tintSlider.setSliderChangeListener((e) -> {
@@ -106,7 +120,7 @@ public class AdjustmentsForm extends JFrame {
       greensSlider.setValue(getWbGreensSliderDefVal() - tint * 2 / 3);
       bluesSlider.setValue(getWbBluesSliderDefVal() + tint / 3);
     });
-    add(tintSlider);
+    colorsPanel.add(tintSlider);
 
     MouseAdapter wbChanger = new MouseAdapter() {
       @Override public void mousePressed(final MouseEvent e) {
@@ -125,10 +139,60 @@ public class AdjustmentsForm extends JFrame {
     wbSlider.getSlider().addMouseListener(wbChanger);
     tintSlider.getSlider().addMouseListener(wbChanger);
 
+    curvesPanel = new JPanel();
+    curvesPanel.setLayout(new BoxLayout(curvesPanel, BoxLayout.PAGE_AXIS));
+
     chbCurvesEnabled = new Checkbox();
     chbCurvesEnabled.setLabel("Enable curves");
-    add(chbCurvesEnabled);
+    curvesPanel.add(chbCurvesEnabled);
 
+    curvesComponent = new CurvesComponent(histogramComponent);
+    curvesComponent.setOnChangeCallback((e) -> {
+      if (chbCurvesEnabled.getState()) {
+        doubleImage.setCustomPixelConverter(curvesComponent.getPixelConverter());
+      } else {
+        doubleImage.setDefaultPixelConverter();
+      }
+      doubleImageComponent.repaint();
+    });
+    chbCurvesEnabled.addItemListener((e) -> {
+      curvesComponent.getOnChangeCallback().accept(0);
+    });
+    curvesPanel.add(curvesComponent);
+
+    filtersPanel = new JPanel();
+
+    chbConvolutionsEnabled = new Checkbox();
+    chbConvolutionsEnabled.setLabel("Enable convolutions");
+    chbConvolutionsEnabled.addItemListener((e) -> {
+      if (chbConvolutionsEnabled.getState()) {
+        doubleImage.setCustomConvolutionKernel(DoubleImageKernelMatrixGenerator.getMatrix());
+      } else {
+        doubleImage.setCustomConvolutionKernel(new double[][]{{1}});
+      }
+      doubleImageComponent.repaint();
+    });
+    filtersPanel.add(chbConvolutionsEnabled);
+
+
+    tabPane = new JTabbedPane(JTabbedPane.NORTH);
+
+    // Add tabs with no text
+    tabPane.addTab(null, colorsPanel);
+    tabPane.addTab(null, curvesPanel);
+    tabPane.addTab(null, filtersPanel);
+
+    // Create vertical labels to render tab titles
+    JLabel labTab1 = new JLabel("Color");
+    tabPane.setTabComponentAt(0, labTab1);
+
+    JLabel labTab2 = new JLabel("Curves");
+    tabPane.setTabComponentAt(1, labTab2);
+
+    JLabel labTab3 = new JLabel("Filters");
+    tabPane.setTabComponentAt(2, labTab3);
+
+    add(tabPane);
 
     pack();
     setSize(320, 480);

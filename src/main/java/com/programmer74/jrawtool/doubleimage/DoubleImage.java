@@ -1,6 +1,5 @@
 package com.programmer74.jrawtool.doubleimage;
 
-import com.programmer74.jrawtool.components.CurvesComponent;
 import com.programmer74.jrawtool.components.HistogramComponent;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -48,6 +47,7 @@ public class DoubleImage {
   private DoubleImageDefaultValues defaultValues;
 
   private Function<Double, Integer> customPixelConverter = null;
+  private double[][] customConvolutionKernel = {{1}};
 
   public DoubleImage(final int width, final int height, final DoubleImageDefaultValues defaultValues) {
     this.width = width;
@@ -150,7 +150,7 @@ public class DoubleImage {
 
   protected void applyConvolution(final double[] pixel,
       final int x, final int y,
-      final double[][] convMatrix, final double convMatrixDivider,
+      final double[][] convMatrix,
       final double strength) {
     int a = convMatrix[0].length;
     for (int colorIndex = 0; colorIndex <= 2; colorIndex++) {
@@ -167,7 +167,7 @@ public class DoubleImage {
           acc += pixels[sourceX][sourceY][colorIndex] * convMatrix[dx][dy];
         }
       }
-      pixel[colorIndex] = acc / convMatrixDivider * strength + pixel[colorIndex] * (1 - strength);
+      pixel[colorIndex] = acc * strength + pixel[colorIndex] * (1 - strength);
     }
   }
 
@@ -196,7 +196,7 @@ public class DoubleImage {
 
         double[] pixel = pixels[x][y].clone();
         adjustPixelParams(pixel);
-        //applyConvolution(pixel, x, y);
+        adjustPixelConvolutions(pixel, x, y);
 
         int r = doubleValueToUint8T(pixel[0]);
         int g = doubleValueToUint8T(pixel[1]);
@@ -216,38 +216,7 @@ public class DoubleImage {
   }
 
   protected void adjustPixelConvolutions(double[] pixel, int x, int y) {
-    final double[][] defaultConvMatrix = {
-        {0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0},
-        {0, 0, 1, 0, 0},
-        {0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0}
-    };
-    final double defaultConvMatrixDivider = 1.0;
-    final double[][] unsharpnessMaskingConvMatrix = {
-        {1, 4, 6, 4, 1},
-        {4, 16, 24, 16, 4},
-        {6, 24, -476, 24, 6},
-        {4, 16, 24, 16, 4},
-        {1, 4, 6, 4, 1}
-    };
-    //1) calculate gaussian matrix
-    //2) divider = -divider
-    //3) mid_value = (divider * 2) + mid_value
-    final double unsharpnessMaskingMatrixDivider = -256.0;
-    final double[][] gaussianConvMatrix = {
-        {1, 4, 6, 4, 1},
-        {4, 16, 24, 16, 4},
-        {6, 24, 36, 24, 6},
-        {4, 16, 24, 16, 4},
-        {1, 4, 6, 4, 1}
-    };
-    final double gaussianMatrixDivider = 256.0;
-    final double[][] sharpnessConvMatrix = {{0, -1, 0}, {-1, 5, -1}, {0, -1, 0}};
-    final double sharpnessMatrixDivider = 1.0;
-    //applyConvolution(pixel, x, y, unsharpnessMaskingConvMatrix, unsharpnessMaskingMatrixDivider,  1.0);
-    //applyConvolution(pixel, x, y, defaultConvMatrix, defaultConvMatrixDivider,  1.0);
-//    applyConvolution(pixel, x, y, gaussianConvMatrix, gaussianMatrixDivider,  1.0);
+    applyConvolution(pixel, x, y, customConvolutionKernel, 1);
   }
 
   public void paintFastPreviewOnSmallerBufferedImage(BufferedImage image, int lx, int ly, int rx, int ry) {
@@ -430,6 +399,11 @@ public class DoubleImage {
 
   public void setGamma(double gamma) {
     this.gGamma = 1 / gamma;
+    markDirty();
+  }
+
+  public void setCustomConvolutionKernel(final double[][] customConvolutionKernel) {
+    this.customConvolutionKernel = customConvolutionKernel;
     markDirty();
   }
 }

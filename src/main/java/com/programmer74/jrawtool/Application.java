@@ -4,9 +4,7 @@ import com.programmer74.jrawtool.components.DoubleImageComponent;
 import com.programmer74.jrawtool.converters.JpegImage;
 import com.programmer74.jrawtool.converters.PGMImage;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
-import com.programmer74.jrawtool.doubleimage.DoubleImageDefaultValues;
 import com.programmer74.jrawtool.forms.AdjustmentsForm;
-import com.programmer74.jrawtool.forms.CurvesForm;
 import com.programmer74.jrawtool.forms.HistogramForm;
 import com.programmer74.jrawtool.forms.MenuForm;
 import com.programmer74.jrawtool.forms.PreviewForm;
@@ -18,7 +16,6 @@ public class Application {
   private PreviewForm previewForm = null;
   private AdjustmentsForm adjustmentsForm = null;
   private HistogramForm histogramForm = null;
-  private CurvesForm curvesForm = null;
   private MenuForm menuForm;
 
   public Application() {
@@ -33,8 +30,6 @@ public class Application {
     adjustmentsForm.dispose();
     histogramForm.setVisible(false);
     histogramForm.dispose();
-    curvesForm.setVisible(false);
-    curvesForm.dispose();
   }
 
   public void loadApplication(String filename) {
@@ -52,11 +47,8 @@ public class Application {
     DoubleImageComponent doubleImageComponent = new DoubleImageComponent(doubleImage);
 
     previewForm = new PreviewForm(this, doubleImageComponent, filename);
-    adjustmentsForm = new AdjustmentsForm(doubleImageComponent, doubleImage);
     histogramForm = new HistogramForm(doubleImage);
-    curvesForm = new CurvesForm(
-        doubleImage, histogramForm.getHistogramComponent(), adjustmentsForm, previewForm
-    );
+    adjustmentsForm = new AdjustmentsForm(doubleImageComponent, doubleImage, histogramForm.getHistogramComponent());
     menuForm.setDoubleImage(doubleImage);
 
     doubleImageComponent.addMouseListener(new MouseAdapter() {
@@ -90,14 +82,10 @@ public class Application {
     previewForm.showForm();
     adjustmentsForm.showForm();
     histogramForm.showForm();
-    curvesForm.showForm();
   }
 
   //./dcraw -4 -D -v -c DSC_1801.NEF > file
   public static void main(String[] args) {
-
-    String filename = args[0];
-
     Application application = new Application();
     //application.loadApplication(filename);
   }
