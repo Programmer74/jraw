@@ -7,12 +7,14 @@ import com.programmer74.jrawtool.components.HistogramComponent;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.doubleimage.DoubleImageDefaultValues;
 import com.programmer74.jrawtool.doubleimage.DoubleImageKernelMatrixGenerator;
+
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.EventListener;
 
 public class AdjustmentsForm extends JFrame {
 
@@ -48,6 +50,110 @@ public class AdjustmentsForm extends JFrame {
 
     setLayout(new FlowLayout());
 
+    setupColorsPanel(doubleImageComponent, doubleImage, defaults);
+
+    setupCurvesPanel(doubleImageComponent, doubleImage, histogramComponent);
+
+    setupFiltersPanel(doubleImageComponent, doubleImage);
+
+
+    tabPane = new JTabbedPane(JTabbedPane.NORTH);
+
+    // Add tabs with no text
+    tabPane.addTab(null, colorsPanel);
+    tabPane.addTab(null, curvesPanel);
+    tabPane.addTab(null, filtersPanel);
+
+    // Create vertical labels to render tab titles
+    JLabel labTab1 = new JLabel("Color");
+    tabPane.setTabComponentAt(0, labTab1);
+
+    JLabel labTab2 = new JLabel("Curves");
+    tabPane.setTabComponentAt(1, labTab2);
+
+    JLabel labTab3 = new JLabel("Filters");
+    tabPane.setTabComponentAt(2, labTab3);
+
+    add(tabPane);
+
+    pack();
+    setSize(320, 480);
+
+  }
+
+  private void setupFiltersPanel(DoubleImageComponent doubleImageComponent, DoubleImage doubleImage) {
+    filtersPanel = new JPanel();
+    filtersPanel.setLayout(new BoxLayout(filtersPanel, BoxLayout.PAGE_AXIS));
+
+    chbConvolutionsEnabled = new Checkbox();
+    chbConvolutionsEnabled.setLabel("Enable convolutions");
+
+    DisplayingSlider sharpeningSlider = new DisplayingSlider("Sharp", 0.0, 1.0, 0.0);
+    DisplayingSlider gaussianBlurStSlider = new DisplayingSlider("GBSt", 0.0, 2.0, 0.0);
+    DisplayingSlider gaussianBlurRadSlider = new DisplayingSlider("GBRd", 1.0, 9.0, 0.5);
+    DisplayingSlider unsharpMaskingStSlider = new DisplayingSlider("USMSt", 0.0, 2.0, 0.0);
+    DisplayingSlider unsharpMaskingRadSlider = new DisplayingSlider("USMRd", 1.0, 9.0, 0.5);
+
+
+    Runnable updateMatrix = new Runnable() {
+      @Override
+      public void run() {
+        if (chbConvolutionsEnabled.getState()) {
+          doubleImage.setCustomConvolutionKernel(
+              DoubleImageKernelMatrixGenerator.buildConvolutionMatrix(
+                sharpeningSlider.getValue(), gaussianBlurStSlider.getValue(), (int)(gaussianBlurRadSlider.getValue()),
+                  unsharpMaskingStSlider.getValue(), (int)(unsharpMaskingRadSlider.getValue())
+              )
+          );
+        } else {
+          doubleImage.setCustomConvolutionKernel(new double[][]{{1}});
+        }
+        doubleImageComponent.repaint();
+      }
+    };
+
+
+    chbConvolutionsEnabled.addItemListener((e) -> { updateMatrix.run(); });
+    filtersPanel.add(chbConvolutionsEnabled);
+
+
+    sharpeningSlider.setSliderChangeListener((e) -> { updateMatrix.run(); });
+    gaussianBlurStSlider.setSliderChangeListener((e) -> { updateMatrix.run(); });
+    gaussianBlurRadSlider.setSliderChangeListener((e) -> { updateMatrix.run(); });
+    unsharpMaskingStSlider.setSliderChangeListener((e) -> { updateMatrix.run(); });
+    unsharpMaskingRadSlider.setSliderChangeListener((e) -> { updateMatrix.run(); });
+
+    filtersPanel.add(sharpeningSlider);
+    filtersPanel.add(gaussianBlurStSlider);
+    filtersPanel.add(gaussianBlurRadSlider);
+    filtersPanel.add(unsharpMaskingStSlider);
+    filtersPanel.add(unsharpMaskingRadSlider);
+  }
+
+  private void setupCurvesPanel(DoubleImageComponent doubleImageComponent, DoubleImage doubleImage, HistogramComponent histogramComponent) {
+    curvesPanel = new JPanel();
+    curvesPanel.setLayout(new BoxLayout(curvesPanel, BoxLayout.PAGE_AXIS));
+
+    chbCurvesEnabled = new Checkbox();
+    chbCurvesEnabled.setLabel("Enable curves");
+    curvesPanel.add(chbCurvesEnabled);
+
+    curvesComponent = new CurvesComponent(histogramComponent);
+    curvesComponent.setOnChangeCallback((e) -> {
+      if (chbCurvesEnabled.getState()) {
+        doubleImage.setCustomPixelConverter(curvesComponent.getPixelConverter());
+      } else {
+        doubleImage.setDefaultPixelConverter();
+      }
+      doubleImageComponent.repaint();
+    });
+    chbCurvesEnabled.addItemListener((e) -> {
+      curvesComponent.getOnChangeCallback().accept(0);
+    });
+    curvesPanel.add(curvesComponent);
+  }
+
+  private void setupColorsPanel(DoubleImageComponent doubleImageComponent, DoubleImage doubleImage, DoubleImageDefaultValues defaults) {
     redsSlider = new DisplayingSlider("Reds", 0.0, 3.0, defaults.getrK());
     greensSlider = new DisplayingSlider("Greens", 0.0, 3.0, defaults.getgK());
     bluesSlider = new DisplayingSlider("Blue", 0.0, 3.0, defaults.getbK());
@@ -138,65 +244,6 @@ public class AdjustmentsForm extends JFrame {
 
     wbSlider.getSlider().addMouseListener(wbChanger);
     tintSlider.getSlider().addMouseListener(wbChanger);
-
-    curvesPanel = new JPanel();
-    curvesPanel.setLayout(new BoxLayout(curvesPanel, BoxLayout.PAGE_AXIS));
-
-    chbCurvesEnabled = new Checkbox();
-    chbCurvesEnabled.setLabel("Enable curves");
-    curvesPanel.add(chbCurvesEnabled);
-
-    curvesComponent = new CurvesComponent(histogramComponent);
-    curvesComponent.setOnChangeCallback((e) -> {
-      if (chbCurvesEnabled.getState()) {
-        doubleImage.setCustomPixelConverter(curvesComponent.getPixelConverter());
-      } else {
-        doubleImage.setDefaultPixelConverter();
-      }
-      doubleImageComponent.repaint();
-    });
-    chbCurvesEnabled.addItemListener((e) -> {
-      curvesComponent.getOnChangeCallback().accept(0);
-    });
-    curvesPanel.add(curvesComponent);
-
-    filtersPanel = new JPanel();
-
-    chbConvolutionsEnabled = new Checkbox();
-    chbConvolutionsEnabled.setLabel("Enable convolutions");
-    chbConvolutionsEnabled.addItemListener((e) -> {
-      if (chbConvolutionsEnabled.getState()) {
-        doubleImage.setCustomConvolutionKernel(DoubleImageKernelMatrixGenerator.getMatrix());
-      } else {
-        doubleImage.setCustomConvolutionKernel(new double[][]{{1}});
-      }
-      doubleImageComponent.repaint();
-    });
-    filtersPanel.add(chbConvolutionsEnabled);
-
-
-    tabPane = new JTabbedPane(JTabbedPane.NORTH);
-
-    // Add tabs with no text
-    tabPane.addTab(null, colorsPanel);
-    tabPane.addTab(null, curvesPanel);
-    tabPane.addTab(null, filtersPanel);
-
-    // Create vertical labels to render tab titles
-    JLabel labTab1 = new JLabel("Color");
-    tabPane.setTabComponentAt(0, labTab1);
-
-    JLabel labTab2 = new JLabel("Curves");
-    tabPane.setTabComponentAt(1, labTab2);
-
-    JLabel labTab3 = new JLabel("Filters");
-    tabPane.setTabComponentAt(2, labTab3);
-
-    add(tabPane);
-
-    pack();
-    setSize(320, 480);
-
   }
 
   public void showForm() {
