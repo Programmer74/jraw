@@ -12,9 +12,9 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.EventListener;
 
 public class AdjustmentsForm extends JFrame {
 
@@ -39,6 +39,10 @@ public class AdjustmentsForm extends JFrame {
   double wbGreensSliderDefVal = 0;
   double wbBluesSliderDefVal = 0;
 
+  private JButton cmdAutoWB;
+  private JButton cmdAutoExposure;
+  private JButton cmdAutoBC;
+
   public AdjustmentsForm(final DoubleImageComponent doubleImageComponent,
       final DoubleImage doubleImage, final HistogramComponent histogramComponent) {
     super("Adjustments");
@@ -50,7 +54,7 @@ public class AdjustmentsForm extends JFrame {
 
     setLayout(new FlowLayout());
 
-    setupColorsPanel(doubleImageComponent, doubleImage, defaults);
+    setupColorsPanel(doubleImageComponent, doubleImage, defaults, histogramComponent);
 
     setupCurvesPanel(doubleImageComponent, doubleImage, histogramComponent);
 
@@ -153,7 +157,10 @@ public class AdjustmentsForm extends JFrame {
     curvesPanel.add(curvesComponent);
   }
 
-  private void setupColorsPanel(DoubleImageComponent doubleImageComponent, DoubleImage doubleImage, DoubleImageDefaultValues defaults) {
+  private void setupColorsPanel(DoubleImageComponent doubleImageComponent,
+      DoubleImage doubleImage,
+      DoubleImageDefaultValues defaults,
+      HistogramComponent histogramComponent) {
     redsSlider = new DisplayingSlider("Reds", 0.0, 3.0, defaults.getrK());
     greensSlider = new DisplayingSlider("Greens", 0.0, 3.0, defaults.getgK());
     bluesSlider = new DisplayingSlider("Blue", 0.0, 3.0, defaults.getbK());
@@ -244,6 +251,87 @@ public class AdjustmentsForm extends JFrame {
 
     wbSlider.getSlider().addMouseListener(wbChanger);
     tintSlider.getSlider().addMouseListener(wbChanger);
+
+    cmdAutoWB = new JButton("AutoWB");
+    cmdAutoWB.addActionListener(new AbstractAction() {
+      @Override public void actionPerformed(final ActionEvent actionEvent) {
+        autoSetColorGainsByAveragingWB(doubleImage);
+      }
+    });
+    colorsPanel.add(cmdAutoWB);
+
+    cmdAutoExposure = new JButton("AutoExposure");
+    cmdAutoExposure.addActionListener(new AbstractAction() {
+      @Override public void actionPerformed(final ActionEvent actionEvent) {
+        autoSetExposureByAdjustingHistogramMax(histogramComponent, exposureSlider);
+      }
+    });
+    colorsPanel.add(cmdAutoExposure);
+
+    cmdAutoBC = new JButton("AutoBC");
+    cmdAutoBC.addActionListener(new AbstractAction() {
+      @Override public void actionPerformed(final ActionEvent actionEvent) {
+
+      }
+    });
+    colorsPanel.add(cmdAutoBC);
+  }
+
+  private void autoSetExposureByAdjustingHistogramMax(final HistogramComponent histogramComponent,
+      final DisplayingSlider exposureSlider) {
+    int[] wPixels = histogramComponent.getwPixelsCount();
+    int maxIndex = 0;
+    int maxValue = 0;
+    for (int i = 0; i < wPixels.length; i++) {
+      if (wPixels[i] > maxValue) {
+        maxValue = wPixels[i];
+        maxIndex = i;
+      }
+    }
+    //we assume that histogram peak is at the middle of the image,
+    //therefore maxIndex should be 128. if not, we adjust it
+    System.out.println("MAX INDEX IS " + maxIndex);
+    double diff = 128.0 / (maxIndex * 1.0) - 1;
+    exposureSlider.setValue(diff);
+  }
+
+  private void autoSetColorGainsByAveragingWB(final DoubleImage doubleImage) {
+    double[][][] pixels = doubleImage.getPixels();
+    double[] avgs = new double[] {0, 0, 0};
+
+    int step = 10;
+    int pixelCount = 0;
+
+    for (int x = 0; x < doubleImage.getWidth(); x += step) {
+      for (int y = 0; y < doubleImage.getHeight(); y += step) {
+        double[] pixel = pixels[x][y].clone();
+//            if ((pixel[0] / 2 > pixel[2]) ||
+//                (pixel[2] / 2 > pixel[0])) {
+//              //skip pixels that are too different on r/b
+//              continue;
+//            }
+        pixelCount++;
+        for (int i = 0; i < 3; i++) {
+          avgs[i] += pixel[i];
+        }
+      }
+    }
+
+    for (int i = 0; i < 3; i++) {
+      avgs[i] /= pixelCount;
+    }
+
+    double r = avgs[0];
+    double g = avgs[1];
+    double b = avgs[2];
+    double max = Math.max(r, Math.max(g, b));
+    double rk = max / r;
+    double gk = max / g;
+    double bk = max / b;
+
+    redsSlider.setValue(rk);
+    greensSlider.setValue(gk);
+    bluesSlider.setValue(bk);
   }
 
   public void showForm() {

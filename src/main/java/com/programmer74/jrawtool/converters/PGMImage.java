@@ -174,9 +174,9 @@ public class PGMImage {
 
   public static DoubleImageDefaultValues getDefaultValues() {
     DoubleImageDefaultValues values = new DoubleImageDefaultValues();
-    values.setrK(2.17);
-    values.setgK(1.0);
-    values.setbK(1.163);
+//    values.setrK(2.17);
+//    values.setgK(1.0);
+//    values.setbK(1.163);
     values.setGamma(2.2222);
     values.setExposure(0);
     values.setBrigthness(0);

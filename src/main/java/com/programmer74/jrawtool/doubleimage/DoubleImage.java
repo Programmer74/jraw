@@ -98,6 +98,14 @@ public class DoubleImage {
     pixels[x][y][2] = b;
   }
 
+  public void getColorizedPixel(int x, int y, double[] output) {
+    double[] pixel = pixels[x][y].clone();
+    adjustPixelParams(pixel);
+    for (int i = 0; i < 2; i++) {
+      output[i] = pixel[i];
+    }
+  }
+
   protected int doubleValueToUint8T(Double value) {
     if (customPixelConverter != null) {
       return customPixelConverter.apply(value);
@@ -208,7 +216,7 @@ public class DoubleImage {
     }
   }
 
-  protected void adjustPixelParams(double[] pixel) {
+  public void adjustPixelParams(double[] pixel) {
     adjustWhiteBalance(pixel);
     adjustGamma(pixel);
     adjustExposure(pixel);

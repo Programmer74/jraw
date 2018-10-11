@@ -87,6 +87,8 @@ public class Application {
   //./dcraw -4 -D -v -c DSC_1801.NEF > file
   public static void main(String[] args) {
     Application application = new Application();
-    //application.loadApplication(filename);
+    if (args.length >= 1) {
+      application.loadApplication(args[0]);
+    }
   }
 }
