@@ -252,6 +252,9 @@ public class AdjustmentsForm extends JFrame {
     wbSlider.getSlider().addMouseListener(wbChanger);
     tintSlider.getSlider().addMouseListener(wbChanger);
 
+    HistogramComponent rawHistogram = new HistogramComponent();
+    doubleImage.setRawHistogramComponent(rawHistogram);
+
     cmdAutoWB = new JButton("AutoWB");
     cmdAutoWB.addActionListener(new AbstractAction() {
       @Override public void actionPerformed(final ActionEvent actionEvent) {
@@ -263,7 +266,7 @@ public class AdjustmentsForm extends JFrame {
     cmdAutoExposure = new JButton("AutoExposure");
     cmdAutoExposure.addActionListener(new AbstractAction() {
       @Override public void actionPerformed(final ActionEvent actionEvent) {
-        autoSetExposureByAdjustingHistogramMax(histogramComponent, exposureSlider);
+        autoSetExposureByAdjustingHistogramMax(rawHistogram, exposureSlider);
       }
     });
     colorsPanel.add(cmdAutoExposure);
@@ -271,7 +274,7 @@ public class AdjustmentsForm extends JFrame {
     cmdAutoBC = new JButton("AutoBC");
     cmdAutoBC.addActionListener(new AbstractAction() {
       @Override public void actionPerformed(final ActionEvent actionEvent) {
-
+        autoSetBCByAdjustingHistogramMax(rawHistogram, brightnessSlider, contrastSlider);
       }
     });
     colorsPanel.add(cmdAutoBC);
@@ -291,8 +294,52 @@ public class AdjustmentsForm extends JFrame {
     //we assume that histogram peak is at the middle of the image,
     //therefore maxIndex should be 128. if not, we adjust it
     System.out.println("MAX INDEX IS " + maxIndex);
+
+    int leftPeakBoundary = maxIndex;
+    int rightPeakBoundary = maxIndex;
+    for (int i = maxIndex; i >= 0; i--) {
+      leftPeakBoundary = i;
+      if (wPixels[i] < (maxValue * 3 / 8)) break;
+    }
+    for (int i = maxIndex; i < 256; i++) {
+      rightPeakBoundary = i;
+      if (wPixels[i] < (maxValue * 3 / 8)) break;
+    }
+
+    maxIndex = (rightPeakBoundary + leftPeakBoundary) / 2;
     double diff = 128.0 / (maxIndex * 1.0) - 1;
     exposureSlider.setValue(diff);
+    doubleImageComponent.repaint();
+  }
+
+  private void autoSetBCByAdjustingHistogramMax(final HistogramComponent histogramComponent,
+      final DisplayingSlider brightnessSlider, final DisplayingSlider contrastSlider) {
+    int[] wPixels = histogramComponent.getwPixelsCount();
+    double maxValue = 0;
+    for (int i = 0; i < wPixels.length; i++) {
+      if (wPixels[i] > maxValue) {
+        maxValue = wPixels[i];
+      }
+    }
+
+    double leftPeakBoundary = 0;
+    double rightPeakBoundary = 255;
+    for (int i = 255; i >= 0 && wPixels[i] < maxValue / 64; i--) {
+      rightPeakBoundary = i;
+    }
+    for (int i = 1; i < 256 && wPixels[i] < maxValue / 64; i++) {
+      leftPeakBoundary = i;
+    }
+
+    System.out.println("left: " + leftPeakBoundary);
+    System.out.println("right: " + rightPeakBoundary);
+
+    double contrastOffset = 255.0 / (rightPeakBoundary - leftPeakBoundary);
+    double brightnessOffset = (contrastOffset * leftPeakBoundary) / 255;
+
+    brightnessSlider.setValue(brightnessOffset);
+    contrastSlider.setValue(contrastOffset);
+    doubleImageComponent.repaint();
   }
 
   private void autoSetColorGainsByAveragingWB(final DoubleImage doubleImage) {
@@ -332,6 +379,13 @@ public class AdjustmentsForm extends JFrame {
     redsSlider.setValue(rk);
     greensSlider.setValue(gk);
     bluesSlider.setValue(bk);
+  }
+
+  public void autoSetImageParamsForRawFootage() {
+    if (doubleImage.getDefaultValues().shouldAutoAdjust()) {
+      cmdAutoWB.doClick();
+      cmdAutoExposure.doClick();
+    }
   }
 
   public void showForm() {

@@ -82,6 +82,7 @@ public class Application {
     previewForm.showForm();
     adjustmentsForm.showForm();
     histogramForm.showForm();
+    adjustmentsForm.autoSetImageParamsForRawFootage();
   }
 
   //./dcraw -4 -D -v -c DSC_1801.NEF > file

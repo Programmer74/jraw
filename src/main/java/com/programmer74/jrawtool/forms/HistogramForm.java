@@ -11,7 +11,8 @@ public class HistogramForm extends JFrame {
   public HistogramForm(final DoubleImage doubleImage) {
     super("Histogram");
 
-    histogramComponent = new HistogramComponent(doubleImage);
+    histogramComponent = new HistogramComponent();
+    doubleImage.setHistogramComponent(histogramComponent);
 
     add(histogramComponent);
     pack();

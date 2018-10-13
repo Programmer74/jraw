@@ -12,10 +12,6 @@ public class HistogramComponent extends Component {
 
   static final int histogramHeight = 128;
 
-  public HistogramComponent(DoubleImage image) {
-    image.setHistogramComponent(this);
-  }
-
   public int[] getwPixelsCount() {
     return wPixelsCount;
   }

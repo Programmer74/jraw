@@ -43,6 +43,7 @@ public class DoubleImage {
 
   private Component parent;
   private HistogramComponent histogramComponent;
+  private HistogramComponent rawHistogramComponent;
 
   private DoubleImageDefaultValues defaultValues;
 
@@ -67,6 +68,11 @@ public class DoubleImage {
   public void setHistogramComponent(
       final HistogramComponent histogramComponent) {
     this.histogramComponent = histogramComponent;
+  }
+
+  public void setRawHistogramComponent(
+      final HistogramComponent histogramComponent) {
+    this.rawHistogramComponent = histogramComponent;
   }
 
   public void setCustomPixelConverter(
@@ -110,12 +116,16 @@ public class DoubleImage {
     if (customPixelConverter != null) {
       return customPixelConverter.apply(value);
     } else {
-      value = value * 255.0;
-      int intval = value.intValue();
-      if (intval > 255) intval = 255;
-      if (intval < 0) intval = 0;
-      return intval;
+      return doubleValueToUint8TWithoutConverter(value);
     }
+  }
+
+  private int doubleValueToUint8TWithoutConverter(Double value) {
+    value = value * 255.0;
+    int intval = value.intValue();
+    if (intval > 255) intval = 255;
+    if (intval < 0) intval = 0;
+    return intval;
   }
 
   private double calculateGammaCorrection(double input, double A, double gamma) {
@@ -233,6 +243,10 @@ public class DoubleImage {
       histogramComponent.resetHistogram();
     }
 
+    if (rawHistogramComponent != null) {
+      rawHistogramComponent.resetHistogram();
+    }
+
     System.out.println("GAMMA: " + gGamma);
 
     for (int x = 0; x < image.getWidth(); x++) {
@@ -246,12 +260,21 @@ public class DoubleImage {
 
         double[] pixel = pixels[sx][sy].clone();
 
+        adjustWhiteBalance(pixel);
+        adjustGamma(pixel);
+        int r = doubleValueToUint8TWithoutConverter(pixel[0]);
+        int g = doubleValueToUint8TWithoutConverter(pixel[1]);
+        int b = doubleValueToUint8TWithoutConverter(pixel[2]);
+        if (rawHistogramComponent != null) {
+          rawHistogramComponent.addPixelToHistogram(r, g, b);
+        }
+
         adjustPixelConvolutions(pixel, sx, sy);
         adjustPixelParams(pixel);
 
-        int r = doubleValueToUint8T(pixel[0]);
-        int g = doubleValueToUint8T(pixel[1]);
-        int b = doubleValueToUint8T(pixel[2]);
+        r = doubleValueToUint8T(pixel[0]);
+        g = doubleValueToUint8T(pixel[1]);
+        b = doubleValueToUint8T(pixel[2]);
 
         int rgbcolor = 0xff000000 | r << 16 | g << 8 | b;
         image.setRGB(x, y, rgbcolor);

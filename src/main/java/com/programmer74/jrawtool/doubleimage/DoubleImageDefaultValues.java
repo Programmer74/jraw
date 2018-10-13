@@ -8,6 +8,15 @@ public class DoubleImageDefaultValues {
   private double contrast = 1.0;
   private double gamma = 1.0;
   private double exposure = 0.0;
+  private boolean shouldAutoAdjust = false;
+
+  public boolean shouldAutoAdjust() {
+    return shouldAutoAdjust;
+  }
+
+  public void setShouldAutoAdjust(final boolean shouldAutoAdjust) {
+    this.shouldAutoAdjust = shouldAutoAdjust;
+  }
 
   public double getrK() {
     return rK;

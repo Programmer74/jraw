@@ -181,6 +181,7 @@ public class PGMImage {
     values.setExposure(0);
     values.setBrigthness(0);
     values.setContrast(1);
+    values.setShouldAutoAdjust(true);
     return values;
   }
 }
