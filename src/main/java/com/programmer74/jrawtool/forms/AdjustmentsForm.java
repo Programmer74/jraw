@@ -36,6 +36,7 @@ public class AdjustmentsForm extends JFrame {
   private JPanel colorsGNPanel;
   private JPanel colorsWBPanel;
   private JPanel colorsBCPanel;
+  private JPanel colorsHSPanel;
   private JPanel curvesPanel;
   private JPanel filtersPanel;
   private JPanel filtersSHPanel;
@@ -118,7 +119,7 @@ public class AdjustmentsForm extends JFrame {
 
     filtersUMPanel = new JPanel();
     filtersUMPanel.setLayout(new BoxLayout(filtersUMPanel, BoxLayout.PAGE_AXIS));
-    filtersUMPanel.setBorder(new TitledBorder("Unsharp Masking"));
+    filtersUMPanel.setBorder(new TitledBorder("Unsharp Masking (Clarity)"));
 
     DisplayingSlider unsharpMaskingStSlider = new DisplayingSlider("Strength", 0.0, 2.0, 0.0);
     DisplayingSlider unsharpMaskingRadSlider = new DisplayingSlider("Radius", 1.0, 9.0, 0.5);
@@ -319,9 +320,35 @@ public class AdjustmentsForm extends JFrame {
     });
     colorsBCPanel.add(cmdAutoBC);
 
+    colorsHSPanel = new JPanel();
+    colorsHSPanel.setLayout(new BoxLayout(colorsHSPanel, BoxLayout.PAGE_AXIS));
+    colorsHSPanel.setBorder(new TitledBorder("Hues"));
+
+    DisplayingSlider huesSlider = new DisplayingSlider("Hues", 0.0, 360.0, 0.0);
+    DisplayingSlider saturationSlider = new DisplayingSlider("Saturtn", 0.0, 3.0, 1.0);
+    DisplayingSlider valueSlider = new DisplayingSlider("Value", -1.0, 1.0, 0.0);
+
+    huesSlider.setSliderChangeListener((e) -> {
+      doubleImage.setHue(huesSlider.getValue());
+      doubleImageComponent.repaint();
+    });
+    saturationSlider.setSliderChangeListener((e) -> {
+      doubleImage.setSaturationK(saturationSlider.getValue());
+      doubleImageComponent.repaint();
+    });
+    valueSlider.setSliderChangeListener((e) -> {
+      doubleImage.setValue(valueSlider.getValue());
+      doubleImageComponent.repaint();
+    });
+
+    colorsHSPanel.add(huesSlider);
+    colorsHSPanel.add(saturationSlider);
+    colorsHSPanel.add(valueSlider);
+
     colorsPanel.add(colorsGNPanel);
     colorsPanel.add(colorsWBPanel);
     colorsPanel.add(colorsBCPanel);
+    colorsPanel.add(colorsHSPanel);
   }
 
   private void autoSetExposureByAdjustingHistogramMax(final HistogramComponent histogramComponent,
@@ -420,9 +447,9 @@ public class AdjustmentsForm extends JFrame {
     double gk = max / g;
     double bk = max / b;
 
-    redsSlider.setValue(rk);
-    greensSlider.setValue(gk);
-    bluesSlider.setValue(bk);
+    redsSlider.setDefaultValue(rk);
+    greensSlider.setDefaultValue(gk);
+    bluesSlider.setDefaultValue(bk);
   }
 
   public void autoSetImageParamsForRawFootage() {

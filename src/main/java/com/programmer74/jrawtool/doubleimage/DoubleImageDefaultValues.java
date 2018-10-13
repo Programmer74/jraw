@@ -8,6 +8,9 @@ public class DoubleImageDefaultValues {
   private double contrast = 1.0;
   private double gamma = 1.0;
   private double exposure = 0.0;
+  private double hue = 0.0;
+  private double saturationK = 1.0;
+  private double value = 0.0;
   private boolean shouldAutoAdjust = false;
 
   public boolean shouldAutoAdjust() {
@@ -72,5 +75,29 @@ public class DoubleImageDefaultValues {
 
   public void setExposure(double exposure) {
     this.exposure = exposure;
+  }
+
+  public double getHue() {
+    return hue;
+  }
+
+  public void setHue(double hue) {
+    this.hue = hue;
+  }
+
+  public double getSaturationK() {
+    return saturationK;
+  }
+
+  public void setSaturationK(double saturationK) {
+    this.saturationK = saturationK;
+  }
+
+  public double getValue() {
+    return value;
+  }
+
+  public void setValue(double value) {
+    this.value = value;
   }
 }

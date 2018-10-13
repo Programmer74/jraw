@@ -24,6 +24,10 @@ public class DoubleImage {
   private double brightness = 0;
   private double contrast = 1.0;
 
+  private double hue = 0.0;
+  private double saturationK = 1.0;
+  private double value = 0.0;
+
   private BufferedImage bufferedImage;
   private BufferedImage bufferedImagePreviewFast;
 
@@ -166,6 +170,15 @@ public class DoubleImage {
     }
   }
 
+  protected void adjustHSLParams(final double[] pixel) {
+    double[] hsvpixel = HSVRGBUtils.rgb2hsv(pixel);
+    hsvpixel[0] += hue;
+    hsvpixel[1] *= saturationK;
+    hsvpixel[2] += value;
+    hsvpixel = HSVRGBUtils.hsv2rgb(hsvpixel);
+    for (int i = 0; i < 3; i++) pixel[i] = hsvpixel[i];
+  }
+
   protected void applyConvolution(final double[] pixel,
       final int x, final int y,
       final double[][] convMatrix,
@@ -213,8 +226,9 @@ public class DoubleImage {
       for (int y = offsetY; y < offsetY + height; y++) {
 
         double[] pixel = pixels[x][y].clone();
-        adjustPixelParams(pixel);
+
         adjustPixelConvolutions(pixel, x, y);
+        adjustPixelParams(pixel);
 
         int r = doubleValueToUint8T(pixel[0]);
         int g = doubleValueToUint8T(pixel[1]);
@@ -231,6 +245,7 @@ public class DoubleImage {
     adjustGamma(pixel);
     adjustExposure(pixel);
     adjustBrightnessContrast(pixel);
+    adjustHSLParams(pixel);
   }
 
   protected void adjustPixelConvolutions(double[] pixel, int x, int y) {
@@ -403,6 +418,9 @@ public class DoubleImage {
     this.exposureStop = defaultValues.getExposure();
     this.brightness = defaultValues.getBrigthness();
     this.contrast = defaultValues.getContrast();
+    this.hue = defaultValues.getHue();
+    this.saturationK = defaultValues.getSaturationK();
+    this.value = defaultValues.getValue();
     this.gGamma = 1 / defaultValues.getGamma();
   }
 
@@ -430,6 +448,21 @@ public class DoubleImage {
 
   public void setGamma(double gamma) {
     this.gGamma = 1 / gamma;
+    markDirty();
+  }
+
+  public void setHue(double hue) {
+    this.hue = hue;
+    markDirty();
+  }
+
+  public void setSaturationK(double saturationK) {
+    this.saturationK = saturationK;
+    markDirty();
+  }
+
+  public void setValue(double value) {
+    this.value = value;
     markDirty();
   }
 

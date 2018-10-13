@@ -9,16 +9,17 @@ import java.awt.event.MouseEvent;
 
 public class DisplayingSlider extends JPanel {
 
-  private final double min, max, defaultValue;
+  private final double min, max;
+  private double defaultValue;
   private JSlider slider;
   private JLabel lblValue;
   private JLabel lblName;
   private ChangeListener sliderChangeListener;
 
-  public DisplayingSlider(final String description, final Double min, final Double max, final Double defaultValue) {
+  public DisplayingSlider(final String description, final Double min, final Double max, final Double defaultVal) {
     this.min = min;
     this.max = max;
-    this.defaultValue = defaultValue;
+    this.defaultValue = defaultVal;
 
     int minInt = (int)(min * 1000);
     int maxInt = (int)(max * 1000);
@@ -27,7 +28,7 @@ public class DisplayingSlider extends JPanel {
     this.lblName.setText(description);
 
     this.lblValue = new JLabel();
-    this.lblValue.setText(defaultValue.toString());
+    this.lblValue.setText(defaultVal.toString());
 
     this.slider = new JSlider(minInt, maxInt);
     setValue(defaultValue);
@@ -89,6 +90,11 @@ public class DisplayingSlider extends JPanel {
 
   public double getDefaultValue() {
     return defaultValue;
+  }
+
+  public void setDefaultValue(double defaultValue) {
+    this.defaultValue = defaultValue;
+    setValue(defaultValue);
   }
 
   public JSlider getSlider() {
