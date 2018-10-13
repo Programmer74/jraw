@@ -61,9 +61,16 @@ public class DisplayingSlider extends JPanel {
     this.add(slider, BorderLayout.CENTER);
     this.add(lblValue, BorderLayout.EAST);
 
-    lblName.setPreferredSize(new Dimension(50, 30));
-    lblValue.setPreferredSize(new Dimension(50, 30));
-    this.setSize(200, 50);
+    lblName.setPreferredSize(new Dimension(75, 30));
+    lblName.setMinimumSize(lblName.getPreferredSize());
+    lblName.setMaximumSize(lblName.getPreferredSize());
+    lblValue.setPreferredSize(new Dimension(60, 30));
+    lblValue.setMinimumSize(lblValue.getPreferredSize());
+    lblValue.setMaximumSize(lblValue.getPreferredSize());
+    slider.setPreferredSize(new Dimension(110, 30));
+    slider.setMinimumSize(slider.getPreferredSize());
+    slider.setMaximumSize(slider.getPreferredSize());
+    this.setSize(250, 50);
   }
 
   public double getValue() {

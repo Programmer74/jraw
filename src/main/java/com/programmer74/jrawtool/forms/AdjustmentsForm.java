@@ -9,6 +9,7 @@ import com.programmer74.jrawtool.doubleimage.DoubleImageDefaultValues;
 import com.programmer74.jrawtool.doubleimage.DoubleImageKernelMatrixGenerator;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
@@ -32,8 +33,14 @@ public class AdjustmentsForm extends JFrame {
 
   JTabbedPane tabPane;
   private JPanel colorsPanel;
+  private JPanel colorsGNPanel;
+  private JPanel colorsWBPanel;
+  private JPanel colorsBCPanel;
   private JPanel curvesPanel;
   private JPanel filtersPanel;
+  private JPanel filtersSHPanel;
+  private JPanel filtersGBPanel;
+  private JPanel filtersUMPanel;
 
   double wbRedsSliderDefVal = 0;
   double wbGreensSliderDefVal = 0;
@@ -81,7 +88,7 @@ public class AdjustmentsForm extends JFrame {
     add(tabPane);
 
     pack();
-    setSize(320, 480);
+    setSize(380, 480);
 
   }
 
@@ -92,12 +99,32 @@ public class AdjustmentsForm extends JFrame {
     chbConvolutionsEnabled = new Checkbox();
     chbConvolutionsEnabled.setLabel("Enable convolutions");
 
-    DisplayingSlider sharpeningSlider = new DisplayingSlider("Sharp", 0.0, 1.0, 0.0);
-    DisplayingSlider gaussianBlurStSlider = new DisplayingSlider("GBSt", 0.0, 2.0, 0.0);
-    DisplayingSlider gaussianBlurRadSlider = new DisplayingSlider("GBRd", 1.0, 9.0, 0.5);
-    DisplayingSlider unsharpMaskingStSlider = new DisplayingSlider("USMSt", 0.0, 2.0, 0.0);
-    DisplayingSlider unsharpMaskingRadSlider = new DisplayingSlider("USMRd", 1.0, 9.0, 0.5);
+    filtersSHPanel = new JPanel();
+    filtersSHPanel.setLayout(new BoxLayout(filtersSHPanel, BoxLayout.PAGE_AXIS));
+    filtersSHPanel.setBorder(new TitledBorder("Sharpness"));
 
+    DisplayingSlider sharpeningSlider = new DisplayingSlider("Strength", 0.0, 1.0, 0.0);
+    filtersSHPanel.add(sharpeningSlider);
+
+    filtersGBPanel = new JPanel();
+    filtersGBPanel.setLayout(new BoxLayout(filtersGBPanel, BoxLayout.PAGE_AXIS));
+    filtersGBPanel.setBorder(new TitledBorder("Gaussian Blur"));
+
+    DisplayingSlider gaussianBlurStSlider = new DisplayingSlider("Strength", 0.0, 2.0, 0.0);
+    DisplayingSlider gaussianBlurRadSlider = new DisplayingSlider("Radius", 1.0, 9.0, 0.5);
+
+    filtersGBPanel.add(gaussianBlurStSlider);
+    filtersGBPanel.add(gaussianBlurRadSlider);
+
+    filtersUMPanel = new JPanel();
+    filtersUMPanel.setLayout(new BoxLayout(filtersUMPanel, BoxLayout.PAGE_AXIS));
+    filtersUMPanel.setBorder(new TitledBorder("Unsharp Masking"));
+
+    DisplayingSlider unsharpMaskingStSlider = new DisplayingSlider("Strength", 0.0, 2.0, 0.0);
+    DisplayingSlider unsharpMaskingRadSlider = new DisplayingSlider("Radius", 1.0, 9.0, 0.5);
+
+    filtersUMPanel.add(unsharpMaskingStSlider);
+    filtersUMPanel.add(unsharpMaskingRadSlider);
 
     Runnable updateMatrix = new Runnable() {
       @Override
@@ -127,11 +154,9 @@ public class AdjustmentsForm extends JFrame {
     unsharpMaskingStSlider.setSliderChangeListener((e) -> { updateMatrix.run(); });
     unsharpMaskingRadSlider.setSliderChangeListener((e) -> { updateMatrix.run(); });
 
-    filtersPanel.add(sharpeningSlider);
-    filtersPanel.add(gaussianBlurStSlider);
-    filtersPanel.add(gaussianBlurRadSlider);
-    filtersPanel.add(unsharpMaskingStSlider);
-    filtersPanel.add(unsharpMaskingRadSlider);
+    filtersPanel.add(filtersSHPanel);
+    filtersPanel.add(filtersGBPanel);
+    filtersPanel.add(filtersUMPanel);
   }
 
   private void setupCurvesPanel(DoubleImageComponent doubleImageComponent, DoubleImage doubleImage, HistogramComponent histogramComponent) {
@@ -140,6 +165,9 @@ public class AdjustmentsForm extends JFrame {
 
     chbCurvesEnabled = new Checkbox();
     chbCurvesEnabled.setLabel("Enable curves");
+    chbCurvesEnabled.setPreferredSize(new Dimension(150, 20));
+    chbCurvesEnabled.setMaximumSize(chbCurvesEnabled.getPreferredSize());
+    chbCurvesEnabled.setMinimumSize(chbCurvesEnabled.getPreferredSize());
     curvesPanel.add(chbCurvesEnabled);
 
     curvesComponent = new CurvesComponent(histogramComponent);
@@ -167,9 +195,9 @@ public class AdjustmentsForm extends JFrame {
     setWbSlidersDefVal();
 
     DisplayingSlider gammaSlider = new DisplayingSlider("Gamma", 0.0, 3.0, defaults.getGamma());
-    DisplayingSlider exposureSlider = new DisplayingSlider("Exp", -2.0, 2.0, defaults.getExposure());
-    DisplayingSlider brightnessSlider = new DisplayingSlider("Bri", -1.0, 1.0, defaults.getBrigthness());
-    DisplayingSlider contrastSlider = new DisplayingSlider("Con", 0.0, 2.0, defaults.getContrast());
+    DisplayingSlider exposureSlider = new DisplayingSlider("Exposure", -2.0, 2.0, defaults.getExposure());
+    DisplayingSlider brightnessSlider = new DisplayingSlider("Brghtnss", -1.0, 1.0, defaults.getBrigthness());
+    DisplayingSlider contrastSlider = new DisplayingSlider("Contrast", 0.0, 2.0, defaults.getContrast());
 
     ChangeListener sliderChangeListeners = new ChangeListener() {
       @Override public void stateChanged(final ChangeEvent changeEvent) {
@@ -194,28 +222,40 @@ public class AdjustmentsForm extends JFrame {
     colorsPanel = new JPanel();
     colorsPanel.setLayout(new BoxLayout(colorsPanel, BoxLayout.PAGE_AXIS));
 
+    colorsGNPanel = new JPanel();
+    colorsGNPanel.setLayout(new BoxLayout(colorsGNPanel, BoxLayout.PAGE_AXIS));
+    colorsGNPanel.setBorder(new TitledBorder("Color gain"));
+
     redsSlider.setSliderChangeListener(sliderChangeListeners);
-    colorsPanel.add(redsSlider);
+    colorsGNPanel.add(redsSlider);
 
     greensSlider.setSliderChangeListener(sliderChangeListeners);
-    colorsPanel.add(greensSlider);
+    colorsGNPanel.add(greensSlider);
 
     bluesSlider.setSliderChangeListener(sliderChangeListeners);
-    colorsPanel.add(bluesSlider);
+    colorsGNPanel.add(bluesSlider);
+
+    colorsBCPanel = new JPanel();
+    colorsBCPanel.setLayout(new BoxLayout(colorsBCPanel, BoxLayout.PAGE_AXIS));
+    colorsBCPanel.setBorder(new TitledBorder("Brightness and contrast"));
 
     gammaSlider.setSliderChangeListener(sliderChangeListeners);
-    colorsPanel.add(gammaSlider);
+    colorsBCPanel.add(gammaSlider);
 
     exposureSlider.setSliderChangeListener(sliderChangeListeners);
-    colorsPanel.add(exposureSlider);
+    colorsBCPanel.add(exposureSlider);
 
     brightnessSlider.setSliderChangeListener(sliderChangeListeners);
-    colorsPanel.add(brightnessSlider);
+    colorsBCPanel.add(brightnessSlider);
 
     contrastSlider.setSliderChangeListener(sliderChangeListeners);
-    colorsPanel.add(contrastSlider);
+    colorsBCPanel.add(contrastSlider);
 
-    DisplayingSlider wbSlider = new DisplayingSlider("WB", -1.0, 1.0, 0.0);
+    colorsWBPanel = new JPanel();
+    colorsWBPanel.setLayout(new BoxLayout(colorsWBPanel, BoxLayout.PAGE_AXIS));
+    colorsWBPanel.setBorder(new TitledBorder("White balance"));
+
+    DisplayingSlider wbSlider = new DisplayingSlider("Temp", -1.0, 1.0, 0.0);
 
     wbSlider.setSliderChangeListener(new ChangeListener() {
       @Override public void stateChanged(final ChangeEvent changeEvent) {
@@ -224,7 +264,7 @@ public class AdjustmentsForm extends JFrame {
         bluesSlider.setValue(getWbBluesSliderDefVal() + wb);
       }
     });
-    colorsPanel.add(wbSlider);
+    colorsWBPanel.add(wbSlider);
 
     DisplayingSlider tintSlider = new DisplayingSlider("Tint", -1.0, 1.0, 0.0);
     tintSlider.setSliderChangeListener((e) -> {
@@ -233,7 +273,7 @@ public class AdjustmentsForm extends JFrame {
       greensSlider.setValue(getWbGreensSliderDefVal() - tint * 2 / 3);
       bluesSlider.setValue(getWbBluesSliderDefVal() + tint / 3);
     });
-    colorsPanel.add(tintSlider);
+    colorsWBPanel.add(tintSlider);
 
     MouseAdapter wbChanger = new MouseAdapter() {
       @Override public void mousePressed(final MouseEvent e) {
@@ -255,29 +295,33 @@ public class AdjustmentsForm extends JFrame {
     HistogramComponent rawHistogram = new HistogramComponent();
     doubleImage.setRawHistogramComponent(rawHistogram);
 
-    cmdAutoWB = new JButton("AutoWB");
+    cmdAutoWB = new JButton("Auto");
     cmdAutoWB.addActionListener(new AbstractAction() {
       @Override public void actionPerformed(final ActionEvent actionEvent) {
         autoSetColorGainsByAveragingWB(doubleImage);
       }
     });
-    colorsPanel.add(cmdAutoWB);
+    colorsWBPanel.add(cmdAutoWB);
 
-    cmdAutoExposure = new JButton("AutoExposure");
+    cmdAutoExposure = new JButton("Auto exposure");
     cmdAutoExposure.addActionListener(new AbstractAction() {
       @Override public void actionPerformed(final ActionEvent actionEvent) {
         autoSetExposureByAdjustingHistogramMax(rawHistogram, exposureSlider);
       }
     });
-    colorsPanel.add(cmdAutoExposure);
+    colorsBCPanel.add(cmdAutoExposure);
 
-    cmdAutoBC = new JButton("AutoBC");
+    cmdAutoBC = new JButton("Auto brightness/contrast");
     cmdAutoBC.addActionListener(new AbstractAction() {
       @Override public void actionPerformed(final ActionEvent actionEvent) {
         autoSetBCByAdjustingHistogramMax(rawHistogram, brightnessSlider, contrastSlider);
       }
     });
-    colorsPanel.add(cmdAutoBC);
+    colorsBCPanel.add(cmdAutoBC);
+
+    colorsPanel.add(colorsGNPanel);
+    colorsPanel.add(colorsWBPanel);
+    colorsPanel.add(colorsBCPanel);
   }
 
   private void autoSetExposureByAdjustingHistogramMax(final HistogramComponent histogramComponent,
