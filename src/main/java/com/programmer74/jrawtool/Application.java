@@ -2,7 +2,8 @@ package com.programmer74.jrawtool;
 
 import com.programmer74.jrawtool.components.DoubleImageComponent;
 import com.programmer74.jrawtool.converters.JpegImage;
-import com.programmer74.jrawtool.converters.PGMImage;
+import com.programmer74.jrawtool.converters.PGMImageColoured;
+import static com.programmer74.jrawtool.converters.RawToPgmConverter.convertRawToPgmAndGetFilename;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.forms.AdjustmentsForm;
 import com.programmer74.jrawtool.forms.HistogramForm;
@@ -46,8 +47,14 @@ public class Application {
     DoubleImage doubleImage;
     if (filename.toLowerCase().endsWith(".jpg")) {
       doubleImage = JpegImage.loadPicture(filename);
+    } else if (filename.toLowerCase().endsWith(".pgm")) {
+      doubleImage = PGMImageColoured.loadPicture(filename);
+    } else if ((filename.toLowerCase().endsWith(".nef")) || (filename.toLowerCase().endsWith(".cr2"))) {
+      String pgmFilename = convertRawToPgmAndGetFilename(filename);
+      doubleImage = PGMImageColoured.loadPicture(pgmFilename);
     } else {
-      doubleImage = PGMImage.loadPicture(filename);
+      System.err.println("Seems that the filename is unsupported.");
+      return;
     }
     DoubleImageComponent doubleImageComponent = new DoubleImageComponent(doubleImage);
 
@@ -97,7 +104,6 @@ public class Application {
     adjustmentsForm.autoSetImageParamsForRawFootage();
   }
 
-  //./dcraw -4 -D -v -c DSC_1801.NEF > file
   public static void main(String[] args) {
     Application application = new Application();
     if (args.length >= 1) {

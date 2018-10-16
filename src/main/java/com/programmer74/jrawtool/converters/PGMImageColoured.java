@@ -2,7 +2,6 @@ package com.programmer74.jrawtool.converters;
 
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.doubleimage.DoubleImageDefaultValues;
-
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.nio.file.Files;
@@ -10,18 +9,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
-public class PGMImage {
+public class PGMImageColoured {
 
-  // image buffer for plain gray-scale pixel values
-  private int[][] bayerPixels;
+  private int[][] pgmPixels;
 
   private DoubleImage doubleImage;
 
   private int min = 65535;
   private int max = 0;
 
+  private static boolean lastProcessedImageIsColouredImage = false;
+
   private double getValAt(int row, int col) {
-    return bayerPixels[row][col] * 1.0;
+    return pgmPixels[row][col] * 1.0;
   }
 
   private double interpolate(Double ... values) {
@@ -39,9 +39,9 @@ public class PGMImage {
   private void calculateMinMax() {
     int pixel;
 
-    for(int row=0; row<bayerPixels.length; ++row)
-      for(int col=0; col<bayerPixels[row].length; ++col){
-        pixel = bayerPixels[row][col];
+    for(int row=0; row< pgmPixels.length; ++row)
+      for(int col=0; col< pgmPixels[row].length; ++col){
+        pixel = pgmPixels[row][col];
         if (pixel < min) min = pixel;
         if (pixel > max) max = pixel;
       }
@@ -57,12 +57,26 @@ public class PGMImage {
     System.out.println(max);
   }
 
-  // translating raw gray scale pixel values to buffered image for display
+  private void copyPixelsToDoublePixels(){
+    // copy the pixels values
+    for(int row=0; row< pgmPixels.length; row++)
+      for(int col=0, x=0; col < pgmPixels[row].length && x < doubleImage.getWidth(); col += 3, x++){
+
+        double r = 0, g = 0, b = 0;
+
+        r = interpolate(getValAt(row, col));
+        g = interpolate(getValAt(row, col + 1));
+        b = interpolate(getValAt(row, col + 2));
+
+        doubleImage.setPixel(x, row, r, g, b);
+      }
+  }
+
   private void colorizeBayerPixelsToDoublePixels(){
 
     // copy the pixels values
-    for(int row=1; row<bayerPixels.length - 1; ++row)
-      for(int col=1; col<bayerPixels[row].length - 1; ++col){
+    for(int row=1; row<pgmPixels.length - 1; ++row)
+      for(int col=1; col<pgmPixels[row].length - 1; ++col){
 
         double r = 0, g = 0, b = 0;
 
@@ -102,7 +116,7 @@ public class PGMImage {
       }
   }
 
-  private PGMImage() {
+  private PGMImageColoured() {
 
   }
 
@@ -118,18 +132,35 @@ public class PGMImage {
       String filetype=infile.nextLine();
 
       System.out.println("File type: " + filetype);
+
       //infile.nextLine();
       int cols = infile.nextInt();
       int rows = infile.nextInt();
-      System.out.println("Dimensions: " + cols + "x" + rows);
+
+      int w = cols;
+      int h = rows;
+
+      System.out.println("Dimensions: " + w + "x" + h);
       int maxValue = infile.nextInt();
       System.out.println("Max value: " + maxValue);
-      bayerPixels = new int[rows][cols];
-      doubleImage = new DoubleImage(cols, rows, getDefaultValues());
-      System.out.println("Reading in image from " + filename + " of size " + rows + " by " + cols);
+
+      if (filetype.equals("P6")) {
+        System.out.println("Processing coloured PGM");
+        lastProcessedImageIsColouredImage = true;
+        cols *= 3;
+      } else if (filetype.equals("P5")) {
+        System.out.println("Processing monochrome PGM (not debayered)");
+        lastProcessedImageIsColouredImage = false;
+      }
+
+      pgmPixels = new int[rows][cols];
+
+      System.out.println("Array: " + cols + "x" + rows);
+      doubleImage = new DoubleImage(w, h, getDefaultValues());
+      System.out.println("Reading in image from " + filename + " of size " + w + " by " + h);
       // process the rest lines that hold the actual pixel values
 
-      String header = filetype + "\n" + rows + " " + cols + "\n" + maxValue + "\n";
+      String header = filetype + "\n" + h + " " + w + "\n" + maxValue + "\n";
       int offset = header.length();
 
       int pixelH, pixelL;
@@ -138,7 +169,7 @@ public class PGMImage {
         for (int c=0; c<cols; c++) {
           pixelH = data[offset] & 0xFF;
           pixelL = data[offset + 1] & 0xFF;
-          bayerPixels[r][c] = pixelH << 8 | pixelL;
+          pgmPixels[r][c] = pixelH << 8 | pixelL;
           offset += 2;
         }
       infile.close();
@@ -152,21 +183,25 @@ public class PGMImage {
 
   public static DoubleImage loadPicture(String filename) {
 
-    PGMImage pgmImage = new PGMImage();
+    PGMImageColoured pgmImageWithDebayering = new PGMImageColoured();
     //load from file to memory
-    pgmImage.readPGMArray(filename);
+    pgmImageWithDebayering.readPGMArray(filename);
     System.out.println("PGM read");
 
     //calculate minmaxes for to-double conversion
-    pgmImage.calculateMinMax();
+    pgmImageWithDebayering.calculateMinMax();
     System.out.println("MinMax OK");
 
-    //colorize bayer array
-    pgmImage.colorizeBayerPixelsToDoublePixels();
-    System.out.println("Colorizing OK");
+    if (lastProcessedImageIsColouredImage) {
+      //no need to colorize, just convert pixels
+      pgmImageWithDebayering.copyPixelsToDoublePixels();
+    } else {
+      //colorize bayer array
+      pgmImageWithDebayering.colorizeBayerPixelsToDoublePixels();
+      System.out.println("Colorizing OK");
+    }
 
-    DoubleImage image = pgmImage.doubleImage;
-//    image.getBufferedImage();
+    DoubleImage image = pgmImageWithDebayering.doubleImage;
     System.out.println("Converting OK");
 
     return image;
@@ -174,13 +209,14 @@ public class PGMImage {
 
   public static DoubleImageDefaultValues getDefaultValues() {
     DoubleImageDefaultValues values = new DoubleImageDefaultValues();
-//    values.setrK(2.17);
-//    values.setgK(1.0);
-//    values.setbK(1.163);
+    values.setrK(1.0);
+    values.setgK(1.0);
+    values.setbK(1.0);
     values.setGamma(2.2222);
     values.setExposure(0);
     values.setBrigthness(0);
     values.setContrast(1);
+    //values.setShouldAutoAdjust(!lastProcessedImageIsColouredImage);
     values.setShouldAutoAdjust(true);
     return values;
   }

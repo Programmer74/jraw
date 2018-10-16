@@ -1,20 +1,11 @@
 package com.programmer74.jrawtool.components;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Rectangle;
-
+import static com.programmer74.jrawtool.converters.RawToPgmConverter.extractJpegPreviewAndGetFilename;
+import javax.swing.*;
+import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-
 import java.io.File;
-
-import javax.swing.ImageIcon;
-import javax.swing.JComponent;
-import javax.swing.JFileChooser;
 
 //Courtesy of
 //https://www.javaworld.com/article/2074920/learn-java/enterprise-application-integration-customizing-swing-s-file-chooser.html
@@ -114,9 +105,15 @@ public class ImagePreviewAccessoire extends JComponent implements PropertyChange
         return;
       }
 
+      String filename = file.getPath();
+
+      if ((filename.toLowerCase().endsWith(".nef")) || (filename.toLowerCase().endsWith(".cr2"))) {
+        filename = extractJpegPreviewAndGetFilename(filename);
+      }
+
       // Obtain the selected file's icon.
 
-      icon = new ImageIcon(file.getPath());
+      icon = new ImageIcon(filename);
 
       // The ImageIcon constructor invokes a Toolkit getImage() method to
       // obtain the image identified by file.getPath(). The image is read
@@ -139,7 +136,7 @@ public class ImagePreviewAccessoire extends JComponent implements PropertyChange
       if (icon.getIconWidth() == -1)
       {
         icon.getImage().flush();
-        icon = new ImageIcon(file.getPath());
+        icon = new ImageIcon(filename);
       }
 
       // Scale icon to fit accessory area if icon too big.
