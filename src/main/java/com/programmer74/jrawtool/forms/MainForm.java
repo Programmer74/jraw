@@ -2,6 +2,7 @@ package com.programmer74.jrawtool.forms;
 
 import com.programmer74.jrawtool.Application;
 import com.programmer74.jrawtool.components.HistogramComponent;
+import com.programmer74.jrawtool.components.ImagePreviewAccessoire;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -14,13 +15,14 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 
-public class MenuForm extends JFrame {
+public class MainForm extends JFrame {
 
   private Application parentApp;
   private DoubleImage doubleImage;
+  private JDesktopPane mdiPane;
 
-  public MenuForm(final DoubleImage doubleImage, final Application application) {
-    super("Menu");
+  public MainForm(final DoubleImage doubleImage, final Application application) {
+    super("JRaw");
 
     addWindowListener(new WindowAdapter() {
       public void windowClosing(WindowEvent e) {
@@ -29,8 +31,20 @@ public class MenuForm extends JFrame {
     });
 
     this.doubleImage = doubleImage;
-    parentApp = application;
+    this.parentApp = application;
+    this.mdiPane = new JDesktopPane();
 
+    add(mdiPane);
+    setupMenu();
+
+    setSize(new Dimension(1024, 768));
+  }
+
+  public JDesktopPane getMdiPane() {
+    return mdiPane;
+  }
+
+  private void setupMenu() {
     JMenuBar menubar = new JMenuBar();
 
     JMenu file = new JMenu("File");
@@ -64,8 +78,6 @@ public class MenuForm extends JFrame {
     menubar.add(file);
 
     setJMenuBar(menubar);
-
-    setSize(new Dimension(600, 50));
   }
 
   public void showForm() {
@@ -78,6 +90,7 @@ public class MenuForm extends JFrame {
     FileFilter imageFilter = new FileNameExtensionFilter(
         "Image files", "pgm", "jpg");
     fileChooser.setFileFilter(imageFilter);
+    fileChooser.setAccessory(new ImagePreviewAccessoire(fileChooser));
     int result = fileChooser.showOpenDialog(this);
     if (result == JFileChooser.APPROVE_OPTION) {
       File selectedFile = fileChooser.getSelectedFile();

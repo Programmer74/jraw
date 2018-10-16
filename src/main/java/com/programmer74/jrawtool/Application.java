@@ -6,8 +6,9 @@ import com.programmer74.jrawtool.converters.PGMImage;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.forms.AdjustmentsForm;
 import com.programmer74.jrawtool.forms.HistogramForm;
-import com.programmer74.jrawtool.forms.MenuForm;
+import com.programmer74.jrawtool.forms.MainForm;
 import com.programmer74.jrawtool.forms.PreviewForm;
+import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -16,19 +17,23 @@ public class Application {
   private PreviewForm previewForm = null;
   private AdjustmentsForm adjustmentsForm = null;
   private HistogramForm histogramForm = null;
-  private MenuForm menuForm;
+  private MainForm mainForm;
 
   public Application() {
-    menuForm = new MenuForm(null, this);
-    menuForm.showForm();
+    mainForm = new MainForm(null, this);
+    mainForm.showForm();
+    mainForm.setLocationRelativeTo(null);
   }
 
   public void closeApplication() {
     previewForm.setVisible(false);
+    mainForm.remove(previewForm);
     previewForm.dispose();
     adjustmentsForm.setVisible(false);
+    mainForm.remove(adjustmentsForm);
     adjustmentsForm.dispose();
     histogramForm.setVisible(false);
+    mainForm.remove(histogramForm);
     histogramForm.dispose();
   }
 
@@ -46,10 +51,17 @@ public class Application {
     }
     DoubleImageComponent doubleImageComponent = new DoubleImageComponent(doubleImage);
 
-    previewForm = new PreviewForm(this, doubleImageComponent, filename);
-    histogramForm = new HistogramForm(doubleImage);
-    adjustmentsForm = new AdjustmentsForm(doubleImageComponent, doubleImage, histogramForm.getHistogramComponent());
-    menuForm.setDoubleImage(doubleImage);
+    final JDesktopPane parentPane = mainForm.getMdiPane();
+
+    previewForm = new PreviewForm(this, doubleImageComponent, filename, parentPane);
+    histogramForm = new HistogramForm(doubleImage, parentPane);
+    adjustmentsForm = new AdjustmentsForm(
+        doubleImageComponent, doubleImage, histogramForm.getHistogramComponent(), parentPane);
+    mainForm.setDoubleImage(doubleImage);
+
+    parentPane.add(histogramForm);
+    parentPane.add(adjustmentsForm);
+    parentPane.add(previewForm);
 
     doubleImageComponent.addMouseListener(new MouseAdapter() {
       @Override public void mouseClicked(final MouseEvent e) {
@@ -79,9 +91,9 @@ public class Application {
       //System.out.println("I was painted");
     });
 
-    previewForm.showForm();
     adjustmentsForm.showForm();
     histogramForm.showForm();
+    previewForm.showForm();
     adjustmentsForm.autoSetImageParamsForRawFootage();
   }
 

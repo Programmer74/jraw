@@ -17,7 +17,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class AdjustmentsForm extends JFrame {
+public class AdjustmentsForm extends JInternalFrame {
 
   private DoubleImageComponent doubleImageComponent;
   private DoubleImage doubleImage;
@@ -52,8 +52,11 @@ public class AdjustmentsForm extends JFrame {
   private JButton cmdAutoBC;
 
   public AdjustmentsForm(final DoubleImageComponent doubleImageComponent,
-      final DoubleImage doubleImage, final HistogramComponent histogramComponent) {
-    super("Adjustments");
+      final DoubleImage doubleImage, final HistogramComponent histogramComponent,
+      final JDesktopPane parentPane) {
+
+    //resizable, closable, maximizable, iconifiable
+    super("Adjustments", true, false, false, true);
 
     this.doubleImage = doubleImage;
     this.doubleImageComponent = doubleImageComponent;
@@ -89,8 +92,7 @@ public class AdjustmentsForm extends JFrame {
     add(tabPane);
 
     pack();
-    setSize(380, 480);
-
+    setSize(380, 600);
   }
 
   private void setupFiltersPanel(DoubleImageComponent doubleImageComponent, DoubleImage doubleImage) {
