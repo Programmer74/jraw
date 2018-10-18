@@ -1,7 +1,7 @@
 package com.programmer74.jrawtool.forms;
 
 import com.programmer74.jrawtool.Application;
-import com.programmer74.jrawtool.components.DoubleImageComponent;
+import com.programmer74.jrawtool.components.ImageViewer;
 import javax.swing.*;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
@@ -10,7 +10,7 @@ public class PreviewForm extends JInternalFrame {
 
   private Application parentApp;
 
-  public PreviewForm(final Application app, final DoubleImageComponent doubleImageComponent,
+  public PreviewForm(final Application app, final ImageViewer imageViewer,
       final String filename, final JDesktopPane parentPane) {
     //resizable, closable, maximizable, iconifiable
     super("Image: " + filename, true, true, true, true);
@@ -22,7 +22,7 @@ public class PreviewForm extends JInternalFrame {
       }
     });
 
-    add(doubleImageComponent);
+    add(imageViewer);
 
     pack();
     setLocation((parentPane.getWidth() - getWidth()) / 2,

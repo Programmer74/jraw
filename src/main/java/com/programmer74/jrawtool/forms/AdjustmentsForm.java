@@ -2,7 +2,7 @@ package com.programmer74.jrawtool.forms;
 
 import com.programmer74.jrawtool.components.CurvesComponent;
 import com.programmer74.jrawtool.components.DisplayingSlider;
-import com.programmer74.jrawtool.components.DoubleImageComponent;
+import com.programmer74.jrawtool.components.ImageViewer;
 import com.programmer74.jrawtool.components.HistogramComponent;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.doubleimage.DoubleImageDefaultValues;
@@ -19,7 +19,7 @@ import java.awt.event.MouseEvent;
 
 public class AdjustmentsForm extends JInternalFrame {
 
-  private DoubleImageComponent doubleImageComponent;
+  private ImageViewer imageViewer;
   private DoubleImage doubleImage;
 
   private CurvesComponent curvesComponent;
@@ -51,7 +51,7 @@ public class AdjustmentsForm extends JInternalFrame {
   private JButton cmdAutoExposure;
   private JButton cmdAutoBC;
 
-  public AdjustmentsForm(final DoubleImageComponent doubleImageComponent,
+  public AdjustmentsForm(final ImageViewer imageViewer,
       final DoubleImage doubleImage, final HistogramComponent histogramComponent,
       final JDesktopPane parentPane) {
 
@@ -59,17 +59,17 @@ public class AdjustmentsForm extends JInternalFrame {
     super("Adjustments", true, false, false, true);
 
     this.doubleImage = doubleImage;
-    this.doubleImageComponent = doubleImageComponent;
+    this.imageViewer = imageViewer;
 
     DoubleImageDefaultValues defaults = doubleImage.getDefaultValues();
 
     setLayout(new FlowLayout());
 
-    setupColorsPanel(doubleImageComponent, doubleImage, defaults, histogramComponent);
+    setupColorsPanel(imageViewer, doubleImage, defaults, histogramComponent);
 
-    setupCurvesPanel(doubleImageComponent, doubleImage, histogramComponent);
+    setupCurvesPanel(imageViewer, doubleImage, histogramComponent);
 
-    setupFiltersPanel(doubleImageComponent, doubleImage);
+    setupFiltersPanel(imageViewer, doubleImage);
 
 
     tabPane = new JTabbedPane(JTabbedPane.NORTH);
@@ -95,7 +95,7 @@ public class AdjustmentsForm extends JInternalFrame {
     setSize(380, 600);
   }
 
-  private void setupFiltersPanel(DoubleImageComponent doubleImageComponent, DoubleImage doubleImage) {
+  private void setupFiltersPanel(ImageViewer imageViewer, DoubleImage doubleImage) {
     filtersPanel = new JPanel();
     filtersPanel.setLayout(new BoxLayout(filtersPanel, BoxLayout.PAGE_AXIS));
 
@@ -142,7 +142,7 @@ public class AdjustmentsForm extends JInternalFrame {
         } else {
           doubleImage.setCustomConvolutionKernel(new double[][]{{1}});
         }
-        doubleImageComponent.repaint();
+        imageViewer.repaint();
       }
     };
 
@@ -162,7 +162,7 @@ public class AdjustmentsForm extends JInternalFrame {
     filtersPanel.add(filtersUMPanel);
   }
 
-  private void setupCurvesPanel(DoubleImageComponent doubleImageComponent, DoubleImage doubleImage, HistogramComponent histogramComponent) {
+  private void setupCurvesPanel(ImageViewer imageViewer, DoubleImage doubleImage, HistogramComponent histogramComponent) {
     curvesPanel = new JPanel();
     curvesPanel.setLayout(new BoxLayout(curvesPanel, BoxLayout.PAGE_AXIS));
 
@@ -180,7 +180,7 @@ public class AdjustmentsForm extends JInternalFrame {
       } else {
         doubleImage.setDefaultPixelConverter();
       }
-      doubleImageComponent.repaint();
+      imageViewer.repaint();
     });
     chbCurvesEnabled.addItemListener((e) -> {
       curvesComponent.getOnChangeCallback().accept(0);
@@ -188,7 +188,7 @@ public class AdjustmentsForm extends JInternalFrame {
     curvesPanel.add(curvesComponent);
   }
 
-  private void setupColorsPanel(DoubleImageComponent doubleImageComponent,
+  private void setupColorsPanel(ImageViewer imageViewer,
       DoubleImage doubleImage,
       DoubleImageDefaultValues defaults,
       HistogramComponent histogramComponent) {
@@ -218,7 +218,7 @@ public class AdjustmentsForm extends JInternalFrame {
         doubleImage.setExposureStop(exp);
         doubleImage.setBrightness(bri);
         doubleImage.setContrast(con);
-        doubleImageComponent.repaint();
+        imageViewer.repaint();
       }
     };
 
@@ -332,15 +332,15 @@ public class AdjustmentsForm extends JInternalFrame {
 
     huesSlider.setSliderChangeListener((e) -> {
       doubleImage.setHue(huesSlider.getValue());
-      doubleImageComponent.repaint();
+      imageViewer.repaint();
     });
     saturationSlider.setSliderChangeListener((e) -> {
       doubleImage.setSaturationK(saturationSlider.getValue());
-      doubleImageComponent.repaint();
+      imageViewer.repaint();
     });
     valueSlider.setSliderChangeListener((e) -> {
       doubleImage.setValue(valueSlider.getValue());
-      doubleImageComponent.repaint();
+      imageViewer.repaint();
     });
 
     colorsHSPanel.add(huesSlider);
@@ -382,7 +382,7 @@ public class AdjustmentsForm extends JInternalFrame {
     maxIndex = (rightPeakBoundary + leftPeakBoundary) / 2;
     double diff = 128.0 / (maxIndex * 1.0) - 1;
     exposureSlider.setValue(diff);
-    doubleImageComponent.repaint();
+    imageViewer.repaint();
   }
 
   private void autoSetBCByAdjustingHistogramMax(final HistogramComponent histogramComponent,
@@ -412,7 +412,7 @@ public class AdjustmentsForm extends JInternalFrame {
 
     brightnessSlider.setValue(brightnessOffset);
     contrastSlider.setValue(contrastOffset);
-    doubleImageComponent.repaint();
+    imageViewer.repaint();
   }
 
   private void autoSetColorGainsByAveragingWB(final DoubleImage doubleImage) {

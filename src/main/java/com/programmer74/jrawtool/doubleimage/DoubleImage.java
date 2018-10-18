@@ -1,12 +1,14 @@
 package com.programmer74.jrawtool.doubleimage;
 
 import com.programmer74.jrawtool.components.HistogramComponent;
+import com.programmer74.jrawtool.components.PaintableImage;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class DoubleImage {
+public class DoubleImage implements PaintableImage {
   //x,y,{r,g,bufferedImage}
   protected double[][][] pixels;
 
@@ -65,6 +67,7 @@ public class DoubleImage {
     this.previewGenerator = new DoubleImageAsyncPreviewGenerator(this);
   }
 
+  @Override
   public void setParent(final Component parent) {
     this.parent = parent;
   }
@@ -90,10 +93,12 @@ public class DoubleImage {
     markDirty();
   }
 
+  @Override
   public int getWidth() {
     return width;
   }
 
+  @Override
   public int getHeight() {
     return height;
   }
@@ -202,16 +207,19 @@ public class DoubleImage {
     }
   }
 
-  private void markSlowPreviewDirty() {
+  @Override
+  public void markSlowPreviewDirty() {
     isSlowPreviewDirty = true;
     isSlowPreviewReady = false;
   }
 
-  private void markPreviewDirty() {
+  @Override
+  public void markPreviewDirty() {
     markSlowPreviewDirty();
     isFastPreviewDirty = true;
   }
 
+  @Override
   public void markDirty() {
     markPreviewDirty();
     isDirty = true;
@@ -365,9 +373,10 @@ public class DoubleImage {
     return bufferedImagePreviewFast;
   }
 
+  @Override
   public void paintPreviewOnGraphics(Graphics g,
-      int paintX, int paintY, int paintW, int paintH,
-      int windowWidth, int windowHeight) {
+                                     int paintX, int paintY, int paintW, int paintH,
+                                     int windowWidth, int windowHeight) {
 
     if ((oldWindowHeight != windowHeight) || (oldWindowWidth != windowWidth)) {
       markSlowPreviewDirty();
@@ -392,16 +401,19 @@ public class DoubleImage {
     }
   }
 
+  @Override
   public void setAfterChunkPaintedCallback(
       final Consumer<Integer> afterChunkPaintedCallback) {
     this.afterChunkPaintedCallback = afterChunkPaintedCallback;
   }
 
+  @Override
   public void setAfterSlowPreviewRenderingBeginCallback(
       final Consumer<Integer> afterSlowPreviewRenderingBeginCallback) {
     this.afterSlowPreviewRenderingBeginCallback = afterSlowPreviewRenderingBeginCallback;
   }
 
+  @Override
   public void setAfterSlowPreviewRenderingEndCallback(
       final Consumer<Integer> afterSlowPreviewRenderingEndCallback) {
     this.afterSlowPreviewRenderingEndCallback = afterSlowPreviewRenderingEndCallback;

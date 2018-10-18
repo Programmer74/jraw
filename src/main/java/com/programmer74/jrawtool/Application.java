@@ -1,6 +1,6 @@
 package com.programmer74.jrawtool;
 
-import com.programmer74.jrawtool.components.DoubleImageComponent;
+import com.programmer74.jrawtool.components.ImageViewer;
 import com.programmer74.jrawtool.converters.JpegImage;
 import com.programmer74.jrawtool.converters.PGMImageColoured;
 import static com.programmer74.jrawtool.converters.RawToPgmConverter.convertRawToPgmAndGetFilename;
@@ -56,26 +56,26 @@ public class Application {
       System.err.println("Seems that the filename is unsupported.");
       return;
     }
-    DoubleImageComponent doubleImageComponent = new DoubleImageComponent(doubleImage);
+    ImageViewer imageViewer = new ImageViewer(doubleImage);
 
     final JDesktopPane parentPane = mainForm.getMdiPane();
 
-    previewForm = new PreviewForm(this, doubleImageComponent, filename, parentPane);
+    previewForm = new PreviewForm(this, imageViewer, filename, parentPane);
     histogramForm = new HistogramForm(doubleImage, parentPane);
     adjustmentsForm = new AdjustmentsForm(
-        doubleImageComponent, doubleImage, histogramForm.getHistogramComponent(), parentPane);
+        imageViewer, doubleImage, histogramForm.getHistogramComponent(), parentPane);
     mainForm.setDoubleImage(doubleImage);
 
     parentPane.add(histogramForm);
     parentPane.add(adjustmentsForm);
     parentPane.add(previewForm);
 
-    doubleImageComponent.addMouseListener(new MouseAdapter() {
+    imageViewer.addMouseListener(new MouseAdapter() {
       @Override public void mouseClicked(final MouseEvent e) {
         if (e.getButton() == 2) {
           //this is middleclick handler
-          int onImageX = doubleImageComponent.getOnImageX(e.getX());
-          int onImageY = doubleImageComponent.getOnImageY(e.getY());
+          int onImageX = imageViewer.getOnImageX(e.getX());
+          int onImageY = imageViewer.getOnImageY(e.getY());
           System.out.println("onImageCursor at " + onImageX + " : " + onImageY);
 
           double[] pixel = doubleImage.getPixels()[onImageX][onImageY];
@@ -94,7 +94,7 @@ public class Application {
       }
     });
 
-    doubleImageComponent.setAfterPaintCallback(e -> {
+    imageViewer.setAfterPaintCallback(e -> {
       //System.out.println("I was painted");
     });
 

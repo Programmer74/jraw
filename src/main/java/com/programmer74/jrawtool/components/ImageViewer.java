@@ -1,6 +1,5 @@
 package com.programmer74.jrawtool.components;
 
-import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -9,9 +8,9 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.function.Consumer;
 
-public class DoubleImageComponent extends Component {
+public class ImageViewer extends Component {
 
-  private DoubleImage doubleImage;
+  private PaintableImage paintableImage;
 
   private double scale;
   private int paintX;
@@ -26,9 +25,9 @@ public class DoubleImageComponent extends Component {
 
   private Consumer<Object> afterPreviewCreatedCallback;
 
-  public DoubleImageComponent(final DoubleImage doubleImage) {
-    this.doubleImage = doubleImage;
-    this.doubleImage.setParent(this);
+  public ImageViewer(final PaintableImage paintableImage) {
+    this.paintableImage = paintableImage;
+    this.paintableImage.setParent(this);
     this.addMouseListener(new MouseAdapter() {
       @Override public void mousePressed(final MouseEvent mouseEvent) {
         pressedX = mouseEvent.getX();
@@ -60,7 +59,7 @@ public class DoubleImageComponent extends Component {
         pressedY = mouseEvent.getY();
 
         forceImageInsidePreviewPanel();
-        doubleImage.isSlowPreviewDirty = true;
+        paintableImage.markSlowPreviewDirty();
         mouseEvent.getComponent().repaint();
       }
     });
@@ -78,17 +77,17 @@ public class DoubleImageComponent extends Component {
     });
 
     recalculatePaintParams();
-    doubleImage.setAfterChunkPaintedCallback((e) -> this.repaint());
-    doubleImage.setAfterSlowPreviewRenderingBeginCallback((e) -> setWaitCursor());
-    doubleImage.setAfterSlowPreviewRenderingEndCallback((e) -> setNormalCursor());
+    paintableImage.setAfterChunkPaintedCallback((e) -> this.repaint());
+    paintableImage.setAfterSlowPreviewRenderingBeginCallback((e) -> setWaitCursor());
+    paintableImage.setAfterSlowPreviewRenderingEndCallback((e) -> setNormalCursor());
   }
 
   public int getOnImageX(int cursorX) {
-    return (cursorX - paintX) * doubleImage.getWidth() / paintW;
+    return (cursorX - paintX) * paintableImage.getWidth() / paintW;
   }
 
   public int getOnImageY(int cursorY) {
-    return (cursorY - paintY) * doubleImage.getHeight() / paintH;
+    return (cursorY - paintY) * paintableImage.getHeight() / paintH;
   }
 
   public void setAfterPaintCallback(final Consumer<Object> afterPaintCallback) {
@@ -135,8 +134,8 @@ public class DoubleImageComponent extends Component {
   }
 
   private void recalculatePaintParams() {
-    int imageWidth = doubleImage.getWidth();
-    int imageHeight = doubleImage.getHeight();
+    int imageWidth = paintableImage.getWidth();
+    int imageHeight = paintableImage.getHeight();
 
     if (doAutoScale) {
       scale = calculateScale();
@@ -176,7 +175,7 @@ public class DoubleImageComponent extends Component {
     paintY = paintY + (int)(paintH * onImageYDelta);
 
     forceImageInsidePreviewPanel();
-    doubleImage.isSlowPreviewDirty = true;
+    paintableImage.markSlowPreviewDirty();
     this.repaint();
   }
 
@@ -185,8 +184,8 @@ public class DoubleImageComponent extends Component {
   }
 
   public double calculateScale() {
-    int imageWidth = doubleImage.getWidth();
-    int imageHeight = doubleImage.getHeight();
+    int imageWidth = paintableImage.getWidth();
+    int imageHeight = paintableImage.getHeight();
 
     int componentWidth = getWidth();
     int componentHeight = getHeight();
@@ -204,7 +203,7 @@ public class DoubleImageComponent extends Component {
   public void paint(Graphics g) {
     recalculatePaintParams();
     forceImageInsidePreviewPanel();
-    doubleImage.paintPreviewOnGraphics(g, paintX, paintY, paintW, paintH, getWidth(), getHeight());
+    paintableImage.paintPreviewOnGraphics(g, paintX, paintY, paintW, paintH, getWidth(), getHeight());
     if (afterPreviewCreatedCallback != null) {
       afterPreviewCreatedCallback.accept(this);
     }
@@ -213,12 +212,12 @@ public class DoubleImageComponent extends Component {
   // overrides the method in Component class, to determine the window size
   @Override
   public Dimension getPreferredSize() {
-    if (doubleImage == null) {
+    if (paintableImage == null) {
       return new Dimension(100, 100);
     } else {
       // make sure the window is not two small to be seen
-      return new Dimension(Math.max(100, doubleImage.getWidth() / 6),
-          Math.max(100, doubleImage.getHeight() / 6));
+      return new Dimension(Math.max(100, paintableImage.getWidth() / 6),
+          Math.max(100, paintableImage.getHeight() / 6));
     }
   }
 
