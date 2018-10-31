@@ -1,13 +1,12 @@
 package com.programmer74.jrawtool;
 
 import com.programmer74.jrawtool.components.ImageViewer;
-import com.programmer74.jrawtool.converters.JpegImage;
-import com.programmer74.jrawtool.converters.PGMImageColoured;
-import static com.programmer74.jrawtool.converters.RawToPgmConverter.convertRawToPgmAndGetFilename;
+import com.programmer74.jrawtool.converters.GenericConverter;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.forms.AdjustmentsForm;
 import com.programmer74.jrawtool.forms.HistogramForm;
 import com.programmer74.jrawtool.forms.MainForm;
+import com.programmer74.jrawtool.forms.PictureBrowserForm;
 import com.programmer74.jrawtool.forms.PreviewForm;
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
@@ -19,11 +18,15 @@ public class Application {
   private AdjustmentsForm adjustmentsForm = null;
   private HistogramForm histogramForm = null;
   private MainForm mainForm;
+  private PictureBrowserForm pictureBrowserForm;
 
   public Application() {
     mainForm = new MainForm(null, this);
     mainForm.showForm();
     mainForm.setLocationRelativeTo(null);
+    pictureBrowserForm = new PictureBrowserForm(this, mainForm.getMdiPane());
+    mainForm.getMdiPane().add(pictureBrowserForm);
+    pictureBrowserForm.showForm();
   }
 
   public void closeApplication() {
@@ -38,27 +41,27 @@ public class Application {
     histogramForm.dispose();
   }
 
+  public void openImageBrowser() {
+//    mainForm.getMdiPane().add(pictureBrowserForm);
+    pictureBrowserForm.showForm();
+  }
+
   public void loadApplication(String filename) {
 
     if (previewForm != null) {
       closeApplication();
     }
 
-    DoubleImage doubleImage;
-    if (filename.toLowerCase().endsWith(".jpg")) {
-      doubleImage = JpegImage.loadPicture(filename);
-    } else if (filename.toLowerCase().endsWith(".pgm")) {
-      doubleImage = PGMImageColoured.loadPicture(filename);
-    } else if ((filename.toLowerCase().endsWith(".nef")) || (filename.toLowerCase().endsWith(".cr2"))) {
-      String pgmFilename = convertRawToPgmAndGetFilename(filename);
-      doubleImage = PGMImageColoured.loadPicture(pgmFilename);
-    } else {
+    DoubleImage doubleImage = GenericConverter.loadPicture(filename);
+    if (doubleImage == null) {
       System.err.println("Seems that the filename is unsupported.");
       return;
     }
     ImageViewer imageViewer = new ImageViewer(doubleImage);
 
     final JDesktopPane parentPane = mainForm.getMdiPane();
+
+    pictureBrowserForm.setVisible(false);
 
     previewForm = new PreviewForm(this, imageViewer, filename, parentPane);
     histogramForm = new HistogramForm(doubleImage, parentPane);

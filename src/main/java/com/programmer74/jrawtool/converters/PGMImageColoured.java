@@ -1,13 +1,15 @@
 package com.programmer74.jrawtool.converters;
 
+import com.programmer74.jrawtool.byteimage.ByteImage;
+import static com.programmer74.jrawtool.converters.RawToPgmConverter.openDCRawAsJpegPreviewExtractor;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.doubleimage.DoubleImageDefaultValues;
+import com.sun.xml.internal.ws.server.UnsupportedMediaException;
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Scanner;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class PGMImageColoured {
 
@@ -120,35 +122,65 @@ public class PGMImageColoured {
 
   }
 
-  private void readPGMArray(String filename){
+  public static byte[] inputStreamToByteArray(final InputStream is) throws IOException {
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+    int nRead;
+    byte[] data = new byte[16384];
+
+    while ((nRead = is.read(data, 0, data.length)) != -1) {
+      buffer.write(data, 0, nRead);
+    }
+
+    return buffer.toByteArray();
+  }
+
+  private static int atoi(final byte[] data, int offset) {
+    int res = 0;
+    int i = offset;
+    while (i < offset + 10) {
+      char c = (char)data[i];
+      if ((c < '0') || (c > '9')) {
+        break;
+      }
+      res = res * 10 + (c - '0');
+      i++;
+    }
+    return res;
+  }
+
+  private void readPGMArray(final InputStream inputStream){
     try {
-      FileReader reader = new FileReader(filename);
-      Scanner infile = new Scanner(reader);
+      byte[] data = inputStreamToByteArray(inputStream);
+      int offset = 0;
 
-      Path path = Paths.get(filename);
-      byte[] data = Files.readAllBytes(path);
+      if (data[0] != (byte)('P')) {
+        throw new UnsupportedMediaException();
+      }
 
-      // process the top 4 header lines
-      String filetype=infile.nextLine();
+      if ((data[1] != (byte)('5')) && (data[1] != (byte)('6'))) {
+        throw new UnsupportedMediaException();
+      }
+      offset += 3;
 
-      System.out.println("File type: " + filetype);
-
-      //infile.nextLine();
-      int cols = infile.nextInt();
-      int rows = infile.nextInt();
+      Integer cols = atoi(data, offset);
+      offset += cols.toString().length() + 1;
+      final Integer rows = atoi(data, offset);
+      offset += rows.toString().length() + 1;
 
       int w = cols;
       int h = rows;
 
       System.out.println("Dimensions: " + w + "x" + h);
-      int maxValue = infile.nextInt();
+      Integer maxValue = atoi(data, offset);
       System.out.println("Max value: " + maxValue);
+      offset += maxValue.toString().length() + 1;
 
-      if (filetype.equals("P6")) {
+      if (data[1] == (byte)('6')) {
         System.out.println("Processing coloured PGM");
         lastProcessedImageIsColouredImage = true;
         cols *= 3;
-      } else if (filetype.equals("P5")) {
+      } else {
         System.out.println("Processing monochrome PGM (not debayered)");
         lastProcessedImageIsColouredImage = false;
       }
@@ -157,35 +189,43 @@ public class PGMImageColoured {
 
       System.out.println("Array: " + cols + "x" + rows);
       doubleImage = new DoubleImage(w, h, getDefaultValues());
-      System.out.println("Reading in image from " + filename + " of size " + w + " by " + h);
-      // process the rest lines that hold the actual pixel values
-
-      String header = filetype + "\n" + h + " " + w + "\n" + maxValue + "\n";
-      int offset = header.length();
+      System.out.println("Reading inputStream image of size " + w + " by " + h);
 
       int pixelH, pixelL;
 
-      for (int r=0; r<rows; r++)
-        for (int c=0; c<cols; c++) {
+      for (int r=0; r<rows; r++) {
+        for (int c = 0; c < cols; c++) {
           pixelH = data[offset] & 0xFF;
           pixelL = data[offset + 1] & 0xFF;
           pgmPixels[r][c] = pixelH << 8 | pixelL;
           offset += 2;
         }
-      infile.close();
+      }
+      inputStream.close();
     } catch(FileNotFoundException fe) {
-      System.out.println("Had a problem opening a file.");
+      System.out.println("Had a problem opening a inputStream.");
     } catch (Exception e) {
-      System.out.println(e.toString() + " caught in readPPM.");
+      System.out.println(e.toString() + " caught inputStream readPPM.");
       e.printStackTrace();
     }
   }
 
   public static DoubleImage loadPicture(String filename) {
+    try {
+      InputStream stream = new FileInputStream(filename);
+      System.out.println("Trying to open file " + filename);
+      return loadPictureFromInputStream(stream);
+    } catch (Exception ex) {
+      System.out.println("Had a problem opening a inputStream.");
+      return null;
+    }
+  }
+
+  public static DoubleImage loadPictureFromInputStream(InputStream stream) {
 
     PGMImageColoured pgmImageWithDebayering = new PGMImageColoured();
     //load from file to memory
-    pgmImageWithDebayering.readPGMArray(filename);
+    pgmImageWithDebayering.readPGMArray(stream);
     System.out.println("PGM read");
 
     //calculate minmaxes for to-double conversion
@@ -205,6 +245,16 @@ public class PGMImageColoured {
     System.out.println("Converting OK");
 
     return image;
+  }
+
+  public static ByteImage loadPreview(String filename) {
+    try {
+      final InputStream is = openDCRawAsJpegPreviewExtractor(filename);
+      return JpegImage.loadPreview(is);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      return null;
+    }
   }
 
   public static DoubleImageDefaultValues getDefaultValues() {

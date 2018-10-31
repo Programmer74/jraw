@@ -57,6 +57,13 @@ public class MainForm extends JFrame {
       handleOpen();
     });
 
+    JMenuItem eOpenViaBrowserItem = new JMenuItem("Open via browser");
+    eOpenViaBrowserItem.setMnemonic(KeyEvent.VK_B);
+    eOpenViaBrowserItem.setToolTipText("Open image via picture browser");
+    eOpenViaBrowserItem.addActionListener((ActionEvent event) -> {
+      handleOpenViaPictureBrowser();
+    });
+
     JMenuItem eSaveItem = new JMenuItem("Save");
     eSaveItem.setMnemonic(KeyEvent.VK_S);
     eSaveItem.setToolTipText("Open image");
@@ -72,6 +79,7 @@ public class MainForm extends JFrame {
     });
 
     file.add(eOpenItem);
+    file.add(eOpenViaBrowserItem);
     file.add(eSaveItem);
     file.add(eExitItem);
 
@@ -88,7 +96,7 @@ public class MainForm extends JFrame {
     JFileChooser fileChooser = new JFileChooser();
     fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
     FileFilter imageFilter = new FileNameExtensionFilter(
-        "Image files", "pgm", "jpg");
+        "Image files", "pgm", "jpg", "bmp", "png", "nef", "cr2");
     fileChooser.setFileFilter(imageFilter);
     fileChooser.setAccessory(new ImagePreviewAccessoire(fileChooser));
     int result = fileChooser.showOpenDialog(this);
@@ -97,6 +105,11 @@ public class MainForm extends JFrame {
       parentApp.loadApplication(selectedFile.getAbsolutePath());
     }
   }
+
+  private void handleOpenViaPictureBrowser() {
+    parentApp.openImageBrowser();
+  }
+
   private void handleSave() {
     if (doubleImage != null) {
       JFileChooser fileChooser = new JFileChooser();

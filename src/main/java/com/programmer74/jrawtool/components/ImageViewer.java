@@ -25,6 +25,8 @@ public class ImageViewer extends Component {
 
   private Consumer<Object> afterPreviewCreatedCallback;
 
+  private Consumer<Graphics> customPaints;
+
   public ImageViewer(final PaintableImage paintableImage) {
     this.paintableImage = paintableImage;
     this.paintableImage.setParent(this);
@@ -44,6 +46,8 @@ public class ImageViewer extends Component {
 
       }
     });
+
+    customPaints = (e) -> { /*nothing*/ };
 
     this.addMouseMotionListener(new MouseMotionAdapter() {
       @Override public void mouseDragged(final MouseEvent mouseEvent) {
@@ -80,6 +84,10 @@ public class ImageViewer extends Component {
     paintableImage.setAfterChunkPaintedCallback((e) -> this.repaint());
     paintableImage.setAfterSlowPreviewRenderingBeginCallback((e) -> setWaitCursor());
     paintableImage.setAfterSlowPreviewRenderingEndCallback((e) -> setNormalCursor());
+  }
+
+  public void setCustomPaints(final Consumer<Graphics> customPaints) {
+    this.customPaints = customPaints;
   }
 
   public int getOnImageX(int cursorX) {
@@ -207,6 +215,7 @@ public class ImageViewer extends Component {
     if (afterPreviewCreatedCallback != null) {
       afterPreviewCreatedCallback.accept(this);
     }
+    customPaints.accept(g);
   }
 
   // overrides the method in Component class, to determine the window size

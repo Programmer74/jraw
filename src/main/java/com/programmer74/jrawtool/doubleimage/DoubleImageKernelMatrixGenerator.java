@@ -18,16 +18,14 @@ public class DoubleImageKernelMatrixGenerator {
 
   private static double[][] buildSharpeningMatrix(int matrixSize) {
     double[][] tmp = new double[][]{
-      {0, 0, 0, 0, 0},
-      {0, -1, -2, -1, 0},
-      {0, -2, 13, -2, 0},
-      {0, -1, -2, -1, 0},
-      {0, 0, 0, 0, 0}
+        {0, -1, 0},
+        {-1, 5, -1},
+        {0, -1, 0}
     };
     double[][] ansMatrix = buildMatrix(matrixSize);
-    int offset = (matrixSize - 5) / 2;
-    for (int i = 0; i < 5; i++) {
-      for (int j = 0; j < 5; j++) {
+    int offset = (matrixSize - 3) / 2;
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
         ansMatrix[i + offset][j + offset] = tmp[i][j];
       }
     }
@@ -79,7 +77,7 @@ public class DoubleImageKernelMatrixGenerator {
       int unsharpMaskingRadius
   ) {
 
-    int totalRadius = Math.max(2, Math.max(gaussianBlurRadius, unsharpMaskingRadius));
+    int totalRadius = Math.max(1, Math.max(gaussianBlurRadius, unsharpMaskingRadius));
     int matrixSize = totalRadius * 2 + 1;
 
     double[][] matrix = buildMatrix(matrixSize);
@@ -101,34 +99,14 @@ public class DoubleImageKernelMatrixGenerator {
       }
     }
 
-    if (sum == 0) {
-      return new double[][] {{1}};
-    }
-
-    for (int i = 0; i < 5; i++) {
-      for (int j = 0; j < 5; j++) {
-        matrix[i][j] /= sum;
-      }
-    }
-
     System.out.println(sum);
-    for (int i = 0; i < 5; i++) {
-      for (int j = 0; j < 5; j++) {
+    for (int i = 0; i < matrixSize; i++) {
+      for (int j = 0; j < matrixSize; j++) {
         System.out.print(matrix[i][j] + " ");
       }
       System.out.println();
     }
 
     return matrix;
-  }
-
-  public static void main(String[] args) {
-    double[][] matrix = buildUnsharpMaskingMatrix(1, 5);
-    for (int i = 0; i < 5; i++) {
-      for (int j = 0; j < 5; j++) {
-        System.out.print(matrix[i][j] + " ");
-      }
-      System.out.println();
-    }
   }
 }

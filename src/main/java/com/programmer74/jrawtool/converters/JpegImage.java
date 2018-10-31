@@ -1,5 +1,6 @@
 package com.programmer74.jrawtool.converters;
 
+import com.programmer74.jrawtool.byteimage.ByteImage;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.doubleimage.DoubleImageDefaultValues;
 
@@ -8,6 +9,7 @@ import javax.imageio.stream.ImageInputStream;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 
 public class JpegImage {
 
@@ -67,6 +69,33 @@ public class JpegImage {
     System.out.println("Converting OK");
 
     return jpegImage.doubleImage;
+  }
+
+  public static ByteImage loadPreview(final String filename) {
+    try {
+      ImageInputStream iis = ImageIO.createImageInputStream(new FileInputStream(filename));
+      return new ByteImage(ImageIO.read(iis));
+    } catch(FileNotFoundException fe) {
+      System.out.println("Had a problem opening a file.");
+    } catch (Exception e) {
+      System.out.println(e.toString() + " caught in readBufferedImage");
+      e.printStackTrace();
+    }
+    return null;
+  }
+
+  public static ByteImage loadPreview(final InputStream inputStream) {
+    try {
+      BufferedImage image = ImageIO.read(inputStream);
+      inputStream.close();
+      return new ByteImage(image);
+    } catch(FileNotFoundException fe) {
+      System.out.println("Had a problem opening a file.");
+    } catch (Exception e) {
+      System.out.println(e.toString() + " caught in readBufferedImage");
+      e.printStackTrace();
+    }
+    return null;
   }
 
   public static DoubleImageDefaultValues getDefaultValues() {

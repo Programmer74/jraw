@@ -1,6 +1,5 @@
 package com.programmer74.jrawtool.components;
 
-import static com.programmer74.jrawtool.converters.RawToPgmConverter.extractJpegPreviewAndGetFilename;
 import javax.swing.*;
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
@@ -106,10 +105,6 @@ public class ImagePreviewAccessoire extends JComponent implements PropertyChange
       }
 
       String filename = file.getPath();
-
-      if ((filename.toLowerCase().endsWith(".nef")) || (filename.toLowerCase().endsWith(".cr2"))) {
-        filename = extractJpegPreviewAndGetFilename(filename);
-      }
 
       // Obtain the selected file's icon.
 
