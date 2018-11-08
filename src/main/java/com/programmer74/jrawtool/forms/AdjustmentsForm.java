@@ -89,7 +89,7 @@ public class AdjustmentsForm extends JInternalFrame {
     JLabel labTab3 = new JLabel("Filters");
     tabPane.setTabComponentAt(2, labTab3);
 
-    tabPane.setPreferredSize(new Dimension(360, 580));
+    tabPane.setPreferredSize(new Dimension(360, 560));
     tabPane.setMaximumSize(tabPane.getPreferredSize());
     tabPane.setMinimumSize(tabPane.getPreferredSize());
 

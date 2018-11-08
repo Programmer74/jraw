@@ -46,8 +46,6 @@ public class DisplayingSlider extends JPanel {
     this.slider = new JSlider(minInt, maxInt);
     setValue(defaultValue);
 
-    this.cmdAutoAdjust = new JButton("A");
-
     slider.addChangeListener(new ChangeListener() {
       @Override
       public void stateChanged(ChangeEvent e) {
@@ -74,8 +72,6 @@ public class DisplayingSlider extends JPanel {
 
     this.setLayout(new BorderLayout());
     this.add(lblName, BorderLayout.WEST);
-    this.sliderPanel.setLayout(new BorderLayout());
-
     this.add(lblValue, BorderLayout.EAST);
 
     lblName.setPreferredSize(new Dimension(75, 30));
@@ -87,9 +83,6 @@ public class DisplayingSlider extends JPanel {
     sliderPanel.setPreferredSize(new Dimension(110, 30));
     sliderPanel.setMinimumSize(sliderPanel.getPreferredSize());
     sliderPanel.setMaximumSize(sliderPanel.getPreferredSize());
-    cmdAutoAdjust.setPreferredSize(new Dimension(16, 30));
-    cmdAutoAdjust.setMinimumSize(cmdAutoAdjust.getPreferredSize());
-    cmdAutoAdjust.setMaximumSize(cmdAutoAdjust.getPreferredSize());
     this.setSize(250, 50);
 
     setAutoAdjustHandler(autoAdjustHandler);
@@ -118,12 +111,24 @@ public class DisplayingSlider extends JPanel {
   }
 
   public void setAutoAdjustHandler(Consumer<Component> handler) {
-    this.autoAdjustHandler = handler;
-    this.sliderPanel.removeAll();
-    this.sliderPanel.add(slider, BorderLayout.CENTER);
-    if (this.autoAdjustHandler != null) {
-      this.sliderPanel.add(cmdAutoAdjust, BorderLayout.EAST);
-      this.cmdAutoAdjust.addActionListener((x) -> autoAdjustHandler.accept(this));
+    autoAdjustHandler = handler;
+    sliderPanel.removeAll();
+    sliderPanel.add(slider, BorderLayout.CENTER);
+    if (autoAdjustHandler != null) {
+      cmdAutoAdjust = new JButton("A");
+      cmdAutoAdjust.setFont(new Font("Arial", Font.PLAIN, 8));
+      sliderPanel.add(cmdAutoAdjust, BorderLayout.EAST);
+      cmdAutoAdjust.addActionListener((x) -> autoAdjustHandler.accept(this));
+      cmdAutoAdjust.setPreferredSize(new Dimension(20, 30));
+      cmdAutoAdjust.setMinimumSize(cmdAutoAdjust.getPreferredSize());
+      cmdAutoAdjust.setMaximumSize(cmdAutoAdjust.getPreferredSize());
+      slider.setPreferredSize(new Dimension(170, 30));
+      slider.setMinimumSize(slider.getPreferredSize());
+      slider.setMaximumSize(slider.getPreferredSize());
+    } else {
+      slider.setPreferredSize(new Dimension(200, 30));
+      slider.setMinimumSize(slider.getPreferredSize());
+      slider.setMaximumSize(slider.getPreferredSize());
     }
     this.add(sliderPanel, BorderLayout.CENTER);
     this.revalidate();
