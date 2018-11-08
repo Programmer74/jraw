@@ -6,20 +6,31 @@ import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.function.Consumer;
 
 public class DisplayingSlider extends JPanel {
 
   private final double min, max;
   private double defaultValue;
   private JSlider slider;
+  private JPanel sliderPanel;
   private JLabel lblValue;
   private JLabel lblName;
+  private JButton cmdAutoAdjust;
   private ChangeListener sliderChangeListener;
+  private Consumer<Component> autoAdjustHandler;
 
-  public DisplayingSlider(final String description, final Double min, final Double max, final Double defaultVal) {
+  public DisplayingSlider(final String description, final Double min, final Double max,
+                          final Double defaultVal) {
+    this(description, min, max, defaultVal, null);
+  }
+
+  public DisplayingSlider(final String description, final Double min, final Double max,
+                          final Double defaultVal, final Consumer<Component> autoAdjustHandler) {
     this.min = min;
     this.max = max;
     this.defaultValue = defaultVal;
+    this.autoAdjustHandler = autoAdjustHandler;
 
     int minInt = (int)(min * 1000);
     int maxInt = (int)(max * 1000);
@@ -30,8 +41,12 @@ public class DisplayingSlider extends JPanel {
     this.lblValue = new JLabel();
     this.lblValue.setText(defaultVal.toString());
 
+    this.sliderPanel = new JPanel();
+
     this.slider = new JSlider(minInt, maxInt);
     setValue(defaultValue);
+
+    this.cmdAutoAdjust = new JButton("A");
 
     slider.addChangeListener(new ChangeListener() {
       @Override
@@ -59,7 +74,8 @@ public class DisplayingSlider extends JPanel {
 
     this.setLayout(new BorderLayout());
     this.add(lblName, BorderLayout.WEST);
-    this.add(slider, BorderLayout.CENTER);
+    this.sliderPanel.setLayout(new BorderLayout());
+
     this.add(lblValue, BorderLayout.EAST);
 
     lblName.setPreferredSize(new Dimension(75, 30));
@@ -68,10 +84,15 @@ public class DisplayingSlider extends JPanel {
     lblValue.setPreferredSize(new Dimension(60, 30));
     lblValue.setMinimumSize(lblValue.getPreferredSize());
     lblValue.setMaximumSize(lblValue.getPreferredSize());
-    slider.setPreferredSize(new Dimension(110, 30));
-    slider.setMinimumSize(slider.getPreferredSize());
-    slider.setMaximumSize(slider.getPreferredSize());
+    sliderPanel.setPreferredSize(new Dimension(110, 30));
+    sliderPanel.setMinimumSize(sliderPanel.getPreferredSize());
+    sliderPanel.setMaximumSize(sliderPanel.getPreferredSize());
+    cmdAutoAdjust.setPreferredSize(new Dimension(16, 30));
+    cmdAutoAdjust.setMinimumSize(cmdAutoAdjust.getPreferredSize());
+    cmdAutoAdjust.setMaximumSize(cmdAutoAdjust.getPreferredSize());
     this.setSize(250, 50);
+
+    setAutoAdjustHandler(autoAdjustHandler);
   }
 
   public double getValue() {
@@ -86,6 +107,27 @@ public class DisplayingSlider extends JPanel {
 
   public void setSliderChangeListener(final ChangeListener sliderChangeListener) {
     this.sliderChangeListener = sliderChangeListener;
+  }
+
+  public Consumer<Component> getAutoAdjustHandler() {
+    return autoAdjustHandler != null ? autoAdjustHandler : (x) -> {};
+  }
+
+  public void doAutoAdjust() {
+    getAutoAdjustHandler().accept(this);
+  }
+
+  public void setAutoAdjustHandler(Consumer<Component> handler) {
+    this.autoAdjustHandler = handler;
+    this.sliderPanel.removeAll();
+    this.sliderPanel.add(slider, BorderLayout.CENTER);
+    if (this.autoAdjustHandler != null) {
+      this.sliderPanel.add(cmdAutoAdjust, BorderLayout.EAST);
+      this.cmdAutoAdjust.addActionListener((x) -> autoAdjustHandler.accept(this));
+    }
+    this.add(sliderPanel, BorderLayout.CENTER);
+    this.revalidate();
+    this.repaint();
   }
 
   public double getDefaultValue() {

@@ -43,13 +43,13 @@ public class AdjustmentsForm extends JInternalFrame {
   private JPanel filtersGBPanel;
   private JPanel filtersUMPanel;
 
+  private DisplayingSlider wbSlider;
+  private DisplayingSlider exposureSlider;
+  private DisplayingSlider brightnessSlider;
+
   double wbRedsSliderDefVal = 0;
   double wbGreensSliderDefVal = 0;
   double wbBluesSliderDefVal = 0;
-
-  private JButton cmdAutoWB;
-  private JButton cmdAutoExposure;
-  private JButton cmdAutoBC;
 
   public AdjustmentsForm(final ImageViewer imageViewer,
       final DoubleImage doubleImage, final HistogramComponent histogramComponent,
@@ -88,6 +88,10 @@ public class AdjustmentsForm extends JInternalFrame {
 
     JLabel labTab3 = new JLabel("Filters");
     tabPane.setTabComponentAt(2, labTab3);
+
+    tabPane.setPreferredSize(new Dimension(360, 580));
+    tabPane.setMaximumSize(tabPane.getPreferredSize());
+    tabPane.setMinimumSize(tabPane.getPreferredSize());
 
     add(tabPane);
 
@@ -198,8 +202,8 @@ public class AdjustmentsForm extends JInternalFrame {
     setWbSlidersDefVal();
 
     DisplayingSlider gammaSlider = new DisplayingSlider("Gamma", 0.0, 3.0, defaults.getGamma());
-    DisplayingSlider exposureSlider = new DisplayingSlider("Exposure", -2.0, 2.0, defaults.getExposure());
-    DisplayingSlider brightnessSlider = new DisplayingSlider("Brghtnss", -1.0, 1.0, defaults.getBrigthness());
+    exposureSlider = new DisplayingSlider("Exposure", -2.0, 2.0, defaults.getExposure());
+    brightnessSlider = new DisplayingSlider("Brghtnss", -1.0, 1.0, defaults.getBrigthness());
     DisplayingSlider contrastSlider = new DisplayingSlider("Contrast", 0.0, 2.0, defaults.getContrast());
 
     ChangeListener sliderChangeListeners = new ChangeListener() {
@@ -258,7 +262,8 @@ public class AdjustmentsForm extends JInternalFrame {
     colorsWBPanel.setLayout(new BoxLayout(colorsWBPanel, BoxLayout.PAGE_AXIS));
     colorsWBPanel.setBorder(new TitledBorder("White balance"));
 
-    DisplayingSlider wbSlider = new DisplayingSlider("Temp", -1.0, 1.0, 0.0);
+    wbSlider = new DisplayingSlider("Temp", -1.0, 1.0, 0.0,
+        (x) -> autoSetColorGainsByAveragingWB(doubleImage));
 
     wbSlider.setSliderChangeListener(new ChangeListener() {
       @Override public void stateChanged(final ChangeEvent changeEvent) {
@@ -269,7 +274,8 @@ public class AdjustmentsForm extends JInternalFrame {
     });
     colorsWBPanel.add(wbSlider);
 
-    DisplayingSlider tintSlider = new DisplayingSlider("Tint", -1.0, 1.0, 0.0);
+    DisplayingSlider tintSlider = new DisplayingSlider("Tint", -1.0, 1.0, 0.0,
+        (x) -> autoSetColorGainsByAveragingWB(doubleImage));
     tintSlider.setSliderChangeListener((e) -> {
       double tint = tintSlider.getValue();
       redsSlider.setValue(getWbRedsSliderDefVal() + tint / 3);
@@ -298,29 +304,14 @@ public class AdjustmentsForm extends JInternalFrame {
     HistogramComponent rawHistogram = new HistogramComponent();
     doubleImage.setRawHistogramComponent(rawHistogram);
 
-    cmdAutoWB = new JButton("Auto");
-    cmdAutoWB.addActionListener(new AbstractAction() {
-      @Override public void actionPerformed(final ActionEvent actionEvent) {
-        autoSetColorGainsByAveragingWB(doubleImage);
-      }
-    });
-    colorsWBPanel.add(cmdAutoWB);
+    exposureSlider.setAutoAdjustHandler((x) ->
+        autoSetExposureByAdjustingHistogramMax(rawHistogram, exposureSlider));
 
-    cmdAutoExposure = new JButton("Auto exposure");
-    cmdAutoExposure.addActionListener(new AbstractAction() {
-      @Override public void actionPerformed(final ActionEvent actionEvent) {
-        autoSetExposureByAdjustingHistogramMax(rawHistogram, exposureSlider);
-      }
-    });
-    colorsBCPanel.add(cmdAutoExposure);
+    brightnessSlider.setAutoAdjustHandler((x) ->
+        autoSetBCByAdjustingHistogramMax(rawHistogram, brightnessSlider, contrastSlider));
 
-    cmdAutoBC = new JButton("Auto brightness/contrast");
-    cmdAutoBC.addActionListener(new AbstractAction() {
-      @Override public void actionPerformed(final ActionEvent actionEvent) {
-        autoSetBCByAdjustingHistogramMax(rawHistogram, brightnessSlider, contrastSlider);
-      }
-    });
-    colorsBCPanel.add(cmdAutoBC);
+    contrastSlider.setAutoAdjustHandler((x) ->
+        autoSetBCByAdjustingHistogramMax(rawHistogram, brightnessSlider, contrastSlider));
 
     colorsHSPanel = new JPanel();
     colorsHSPanel.setLayout(new BoxLayout(colorsHSPanel, BoxLayout.PAGE_AXIS));
@@ -456,8 +447,8 @@ public class AdjustmentsForm extends JInternalFrame {
 
   public void autoSetImageParamsForRawFootage() {
     if (doubleImage.getDefaultValues().shouldAutoAdjust()) {
-      cmdAutoWB.doClick();
-      cmdAutoExposure.doClick();
+      wbSlider.doAutoAdjust();
+      exposureSlider.doAutoAdjust();
     }
   }
 
