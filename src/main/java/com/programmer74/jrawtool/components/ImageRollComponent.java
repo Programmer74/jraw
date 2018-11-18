@@ -1,7 +1,7 @@
 package com.programmer74.jrawtool.components;
 
-import com.programmer74.jrawtool.byteimage.ByteImage;
 import com.programmer74.jrawtool.converters.GenericConverter;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -16,13 +16,15 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class ImageRollComponent extends JPanel {
   private List<File> filenames = new ArrayList<>();
 
   //TODO: guava cache?
-  private Map<File, ByteImage> imagesCache = new HashMap<>();
+  private Map<String, Image> imagesCache = new HashMap<>();
+  private Image emptyImage = new BufferedImage(320, 240, BufferedImage.TYPE_INT_RGB);
 
   //private JPanel paintBar = new JPanel();
   private JScrollBar scrollBar = new JScrollBar(JScrollBar.HORIZONTAL);
@@ -67,6 +69,7 @@ public class ImageRollComponent extends JPanel {
         selectedIndex = hoveredIndex;
         if ((selectedIndex != -1) && (selectedIndex < filenames.size())) {
           if (e.getClickCount() == 2 && !e.isConsumed()) {
+            stopCacheFillerThread();
             selectedFileAccepted.accept(filenames.get(selectedIndex));
           } else {
             selectedFileChanged.accept(filenames.get(selectedIndex));
@@ -84,10 +87,54 @@ public class ImageRollComponent extends JPanel {
         forceRepaint();
       }
     });
+    setupCacheFillerThread();
+  }
+
+  private Thread cacheFillerThread = null;
+  private AtomicBoolean cacheFillerThreadStarted = new AtomicBoolean(false);
+  private AtomicBoolean cacheFillerThreadShouldStop = new AtomicBoolean(false);
+
+  private void setupCacheFillerThread() {
+    cacheFillerThread = new Thread(() -> {
+      cacheFillerThreadStarted.set(true);
+      List<File> filenamesCopy = new ArrayList<>(filenames);
+      for (File file : filenamesCopy) {
+        Image img = GenericConverter.loadSmallPreview(file.getAbsolutePath(), imageRollEntryWidth, imageRollEntryHeight);
+        imagesCache.put(file.getPath(), img);
+//        System.out.println("Added image " + file);
+        paintImageRoll();
+        if (filenamesCopy.size() != filenames.size()) {
+          return;
+        }
+        if (cacheFillerThreadShouldStop.get()) {
+          return;
+        }
+      }
+    });
+  }
+
+  private void startCacheFillerThread() {
+    if (!cacheFillerThreadStarted.get()) {
+      cacheFillerThreadShouldStop.set(false);
+      setupCacheFillerThread();
+      cacheFillerThread.start();
+    }
+  }
+
+  private void stopCacheFillerThread() {
+    if (cacheFillerThreadStarted.get()) {
+      try {
+        cacheFillerThreadShouldStop.set(true);
+        cacheFillerThread.join();
+        cacheFillerThreadStarted.set(false);
+      } catch (Exception ex) {
+
+      }
+    }
   }
 
   public void forceRepaint() {
-    this.repaint();
+    paintImageRoll();
   }
 
   public int getSelectedIndex() {
@@ -110,6 +157,11 @@ public class ImageRollComponent extends JPanel {
   }
 
   public void setFiles(List<File> list) {
+    stopCacheFillerThread();
+    for (Image i: imagesCache.values()) {
+      i.flush();
+    }
+    imagesCache.clear();
     filenames.clear();
     filenames.addAll(list);
     filenames.sort(new Comparator<File>() {
@@ -117,24 +169,9 @@ public class ImageRollComponent extends JPanel {
         return file.getName().compareTo(t1.getName());
       }
     });
+    startCacheFillerThread();
     updateScrollbar();
     forceRepaint();
-  }
-
-  private void fillImageCache(int offset, int count) {
-    if (offset < 0) {
-      return;
-    }
-    if (count > filenames.size() - 1) {
-      count = filenames.size() - 1;
-    }
-    for (int i = offset; i <= count; i++) {
-      File file = filenames.get(i);
-      if (!imagesCache.containsKey(file)) {
-        ByteImage img = GenericConverter.loadPreview(file.getAbsolutePath());
-        imagesCache.put(file, img);
-      }
-    }
   }
 
   private void updateScrollbar() {
@@ -145,11 +182,11 @@ public class ImageRollComponent extends JPanel {
     scrollBar.setValue(0);
   }
 
-  private void paintSingleImage(final BufferedImage image, final Graphics g,
+  private void paintSingleImage(final Image image, final Graphics2D g,
       final int x, final int y, final int maxWidth, final int maxHeight) {
 
-    int imageWidth = image.getWidth();
-    int imageHeight = image.getHeight();
+    int imageWidth = image.getWidth(null);
+    int imageHeight = image.getHeight(null);
 
     double wK = imageWidth * 1.0 / maxWidth;
     double hK = imageHeight * 1.0 / maxHeight;
@@ -167,6 +204,16 @@ public class ImageRollComponent extends JPanel {
 
   @Override public void paint(final Graphics g) {
     super.paint(g);
+    paintImageRoll();
+  }
+
+  private void paintImageRoll() {
+
+    Graphics2D g = (Graphics2D)getGraphics();
+
+//    RepaintManager rm = RepaintManager.currentManager(this);
+//    boolean b = rm.isDoubleBufferingEnabled();
+//    rm.setDoubleBufferingEnabled(false);
 
     imageRollEntryHeight = this.getHeight() - scrollBar.getHeight() - 10;
     imageRollEntryWidth = imageRollEntryHeight / 2 * 3;
@@ -174,9 +221,8 @@ public class ImageRollComponent extends JPanel {
     if (filenames.size() == 0) {
       hoveredIndex = -1;
       selectedIndex = -1;
-      Graphics2D g2d = (Graphics2D)g;
-      g2d.setColor(Color.BLACK);
-      g2d.drawString("No image files found", 24, 24);
+      g.setColor(Color.BLACK);
+      g.drawString("No image files found", 24, 24);
       return;
     }
 
@@ -194,7 +240,7 @@ public class ImageRollComponent extends JPanel {
 
     offset += fromIndex * imageRollEntryWidth;
 
-    fillImageCache(fromIndex, toIndex);
+//    fillImageCache(fromIndex, toIndex);
 
 //    System.out.println("offset = " + (-offset));
 //    System.out.println("fromIndex = " + fromIndex);
@@ -204,26 +250,25 @@ public class ImageRollComponent extends JPanel {
     for (int index = fromIndex; index <= toIndex; index++) {
 
       final File file = filenames.get(index);
+      Image filePreview = imagesCache.getOrDefault(file.getPath(), emptyImage);
+//      Image filePreview = emptyImage;
 
-      if (imagesCache.containsKey(file)) {
-        ByteImage image = imagesCache.get(file);
+      paintSingleImage(filePreview, g, offset, 0, imageRollEntryWidth,
+          imageRollEntryHeight);
 
-        paintSingleImage(image.getBufferedImage(), g, offset, 0, imageRollEntryWidth,
-            imageRollEntryHeight);
+      g.setColor(Color.BLACK);
+      g.drawString(file.getName(), offset, 15);
+      g.setColor(Color.WHITE);
+      g.drawString(file.getName(), offset + 1, 16);
 
-        Graphics2D g2d = (Graphics2D)g;
-        g2d.setColor(Color.BLACK);
-        g2d.drawString(file.getName(), offset, 15);
-        g2d.setColor(Color.WHITE);
-        g2d.drawString(file.getName(), offset + 1, 16);
-
-        if (index == hoveredIndex) {
-          g.setColor(Color.RED);
-          g.drawRect(offset + 1, 1, imageRollEntryWidth - 1, imageRollEntryHeight - 1);
-        }
-
-        offset += imageRollEntryWidth;
+      if (index == hoveredIndex) {
+        g.setColor(Color.RED);
+        g.drawRect(offset + 1, 1, imageRollEntryWidth - 1, imageRollEntryHeight - 1);
       }
+
+      offset += imageRollEntryWidth;
     }
+
+//    rm.setDoubleBufferingEnabled(b);
   }
 }

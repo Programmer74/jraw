@@ -6,6 +6,7 @@ import com.programmer74.jrawtool.doubleimage.DoubleImageDefaultValues;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageInputStream;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

@@ -76,7 +76,7 @@ public class ImageViewer extends Component {
         if (newScale > 2) newScale = 2;
 
         setScaleByMouse(newScale, mouseWheelEvent.getX(), mouseWheelEvent.getY());
-        System.out.println("scroll");
+//        System.out.println("scroll");
       }
     });
 

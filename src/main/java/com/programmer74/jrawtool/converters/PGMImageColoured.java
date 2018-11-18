@@ -2,9 +2,14 @@ package com.programmer74.jrawtool.converters;
 
 import com.programmer74.jrawtool.byteimage.ByteImage;
 import static com.programmer74.jrawtool.converters.RawToPgmConverter.openDCRawAsJpegPreviewExtractor;
+import static java.awt.Image.SCALE_FAST;
+
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.doubleimage.DoubleImageDefaultValues;
 import com.sun.xml.internal.ws.server.UnsupportedMediaException;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

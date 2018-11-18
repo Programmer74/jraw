@@ -7,11 +7,19 @@ import com.programmer74.jrawtool.components.ImageRollComponent;
 import com.programmer74.jrawtool.components.ImageViewer;
 import com.programmer74.jrawtool.converters.GenericConverter;
 import com.programmer74.jrawtool.converters.RawToPgmConverter;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.programmer74.jrawtool.converters.GenericConverter.getFileExtension;
+import static com.programmer74.jrawtool.converters.GenericConverter.getFileNameWithoutExtension;
+import static com.programmer74.jrawtool.converters.GenericConverter.isRaw;
 
 public class PictureBrowserForm extends JInternalFrame {
   private Application parentApp;
@@ -35,7 +43,8 @@ public class PictureBrowserForm extends JInternalFrame {
     extensionsList.add("nef");
     extensionsList.add("cr2");
 
-    fileTreeComponent = new FileTreeComponent(new File("/home/"), extensionsList, true);
+//    fileTreeComponent = new FileTreeComponent(new File("/media/hotaro/win_d/NikonNew/NikonTesting1/DCIM/10022222/"), extensionsList, true);
+    fileTreeComponent = new FileTreeComponent(new File("/"), extensionsList, true);
     fileTreeComponent.setSelectedFileChanged((e) -> {
       if (!e.isDirectory()) {
         handleFileClicked(e);
@@ -106,7 +115,7 @@ public class PictureBrowserForm extends JInternalFrame {
   private void doCustomPaints(Graphics g, File f) {
 
     g.setColor(new Color(0, 0, 0, 128));
-    g.fillRect(24, 0, 500, 150);
+    g.fillRect(24, 0, getWidth() - 24, 150);
 
     Graphics2D g2d = (Graphics2D) g;
     g2d.setFont(new Font("Serif", Font.BOLD, 24));
@@ -116,7 +125,7 @@ public class PictureBrowserForm extends JInternalFrame {
     g2d.setColor(Color.WHITE);
     g2d.setFont(new Font("Serif", Font.BOLD, 16));
 
-    if (f.getName().toLowerCase().endsWith(".nef") || f.getName().toLowerCase().endsWith(".cr2")) {
+    if (isRaw(f.getName())) {
       String rawInfo = RawToPgmConverter.extractRawInformationFromFile(f.getAbsolutePath());
 
       int i = 0;
@@ -137,15 +146,19 @@ public class PictureBrowserForm extends JInternalFrame {
     imageViewerPanel.revalidate();
     imageViewerPanel.repaint();
 
-    List<File> filesToShow = new ArrayList<>();
+    Map<String, File> filesToShowWithoutDuplicants = new HashMap<>();
 
     for (File f : file.listFiles()) {
-
-      String extension = GenericConverter.getFileExtension(f.getName());
+      String extension = getFileExtension(f.getName());
       if (extensionsList.contains(extension)) {
-        filesToShow.add(f);
+        String filenameWithoutExtension = getFileNameWithoutExtension(f.getName());
+        File alreadyStoredFile = filesToShowWithoutDuplicants.get(file);
+        if ((alreadyStoredFile == null) || isRaw(f.getName())) {
+          filesToShowWithoutDuplicants.put(filenameWithoutExtension, f);
+        }
       }
     }
+    List<File> filesToShow = new ArrayList<>(filesToShowWithoutDuplicants.values());
     imageRoll.setFiles(filesToShow);
   }
 }
