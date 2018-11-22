@@ -54,15 +54,15 @@ public class PGMImageColoured {
         if (pixel > max) max = pixel;
       }
 
-    System.out.println(min + ":" + max);
+//    System.out.println(min + ":" + max);
 
     Double x = (Math.log(max) / Math.log(2));
     int bitness = x.intValue() + 1;
 
-    System.out.println("Raw bitness: " + bitness);
+//    System.out.println("Raw bitness: " + bitness);
 
     max = (int)Math.pow(2, bitness);
-    System.out.println(max);
+//    System.out.println(max);
   }
 
   private void copyPixelsToDoublePixels(){

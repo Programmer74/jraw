@@ -55,7 +55,7 @@ public class DoubleImageAsyncPreviewGenerator {
 
   private void paintSlowPreviewOnBufferedImage(final BufferedImage image,
                                               final int lx, final int ly, final int rx, final int ry) {
-    System.out.println("Should paint at " + lx + ":" + ly + " - " +  rx + ":" + ry);
+//    System.out.println("Should paint at " + lx + ":" + ly + " - " +  rx + ":" + ry);
 
     int fromX = 0, toX = 0;
     int fromY = 0, toY = 0;
@@ -63,7 +63,7 @@ public class DoubleImageAsyncPreviewGenerator {
     for (fromX = lx, toX = 0; fromX < rx && toX < image.getWidth(); fromX++, toX++) {
       for (fromY = ly, toY = 0; fromY < ry && toY < image.getHeight(); fromY++, toY++) {
         if (paintingShouldStop) {
-          System.out.println("Slow Preview: requested to stop at " + fromX + ":" + fromY);
+//          System.out.println("Slow Preview: requested to stop at " + fromX + ":" + fromY);
           paintingShouldStop = false;
           return;
         }
@@ -81,10 +81,10 @@ public class DoubleImageAsyncPreviewGenerator {
         image.setRGB(toX, toY, rgbcolor);
       }
     }
-    System.out.println("Stopped at " + toX + ":" + toY + " - " +  fromX + ":" + fromY);
-    System.out.println("Painted at " + lx + ":" + ly + " - " +  rx + ":" + ry);
+//    System.out.println("Stopped at " + toX + ":" + toY + " - " +  fromX + ":" + fromY);
+//    System.out.println("Painted at " + lx + ":" + ly + " - " +  rx + ":" + ry);
     paintingIsReady = true;
-    System.out.println("Callbacking callback...");
+//    System.out.println("Callbacking callback...");
     parent.afterChunkPaintedCallback.accept(0);
   }
 }

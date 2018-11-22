@@ -270,7 +270,7 @@ public class DoubleImage implements PaintableImage {
       rawHistogramComponent.resetHistogram();
     }
 
-    System.out.println("GAMMA: " + gGamma);
+//    System.out.println("GAMMA: " + gGamma);
 
     for (int x = 0; x < image.getWidth(); x++) {
       for (int y = 0; y < image.getHeight(); y++) {
@@ -334,8 +334,8 @@ public class DoubleImage implements PaintableImage {
 
   private BufferedImage getBufferedImagePreview() {
 
-    System.out.println("PaintX " + paintX + " PaintY " + paintY + " PaintW " + paintW + " PaintH " + paintH
-        + " wW " + windowWidth + " wH " + windowHeight);
+//    System.out.println("PaintX " + paintX + " PaintY " + paintY + " PaintW " + paintW + " PaintH " + paintH
+//        + " wW " + windowWidth + " wH " + windowHeight);
 
     Double lx = (-paintX) * 1.0 / paintW * width;
     Double ly = (-paintY) * 1.0 / paintH * height;
@@ -349,11 +349,11 @@ public class DoubleImage implements PaintableImage {
     if (rx > width) rx = width * 1.0;
     if (ry > height) ry = height * 1.0;
 
-    System.out.println("Which is lx " + lx + " ly " + ly + " rx " + rx + " ry " + ry);
+//    System.out.println("Which is lx " + lx + " ly " + ly + " rx " + rx + " ry " + ry);
 
 
     if (isSlowPreviewDirty) {
-        System.out.println("scheduling painting slow preview");
+//        System.out.println("scheduling painting slow preview");
         isSlowPreviewDirty = false;
         isSlowPreviewReady = false;
         previewGenerator.schedulePreviewRendering(lx, ly, rx, ry);
@@ -364,12 +364,12 @@ public class DoubleImage implements PaintableImage {
       paintFastPreviewOnSmallerBufferedImage(bufferedImagePreviewFast, 0, 0, width, height);
     }
     if (previewGenerator.isGeneratedPreviewReady()) {
-      System.out.println("slow preview ready");
+//      System.out.println("slow preview ready");
       isSlowPreviewReady = true;
       afterSlowPreviewRenderingEndCallback.accept(0);
       return previewGenerator.getGeneratedPreview();
     }
-    System.out.println("slow preview NOT READY");
+//    System.out.println("slow preview NOT READY");
     return bufferedImagePreviewFast;
   }
 

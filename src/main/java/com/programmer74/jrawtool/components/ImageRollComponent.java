@@ -203,8 +203,8 @@ public class ImageRollComponent extends JPanel {
   }
 
   @Override public void paint(final Graphics g) {
-    super.paint(g);
     paintImageRoll();
+    super.paint(g);
   }
 
   private void paintImageRoll() {
