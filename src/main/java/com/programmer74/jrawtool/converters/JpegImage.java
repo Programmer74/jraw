@@ -11,6 +11,7 @@ import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.function.Consumer;
 
 public class JpegImage {
 
@@ -43,7 +44,7 @@ public class JpegImage {
 
   }
 
-  private void readBufferedImage(String filename) {
+  private void readBufferedImage(final String filename) {
     try {
 
       ImageInputStream iis = ImageIO.createImageInputStream(new FileInputStream(filename));
@@ -60,14 +61,14 @@ public class JpegImage {
     }
   }
 
-  public static DoubleImage loadPicture(String filename) {
+  public static DoubleImage loadPicture(final String filename, final Consumer<String> statusUpdated) {
     JpegImage jpegImage = new JpegImage();
     //load from file to memory
     jpegImage.readBufferedImage(filename);
-    System.out.println("JPEG read");
+    statusUpdated.accept("JPEG read");
 
     jpegImage.convertJpegPixelsToDoublePixels();
-    System.out.println("Converting OK");
+    statusUpdated.accept("Converting OK");
 
     return jpegImage.doubleImage;
   }

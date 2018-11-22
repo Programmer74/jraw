@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.function.Consumer;
 
 public class PGMImageColoured {
 
@@ -154,7 +155,7 @@ public class PGMImageColoured {
     return res;
   }
 
-  private void readPGMArray(final InputStream inputStream){
+  private void readPGMArray(final InputStream inputStream, final Consumer<String> statusUpdated) {
     try {
       byte[] data = inputStreamToByteArray(inputStream);
       int offset = 0;
@@ -176,25 +177,25 @@ public class PGMImageColoured {
       int w = cols;
       int h = rows;
 
-      System.out.println("Dimensions: " + w + "x" + h);
+      statusUpdated.accept("Dimensions: " + w + "x" + h);
       Integer maxValue = atoi(data, offset);
-      System.out.println("Max value: " + maxValue);
+      statusUpdated.accept("Max value: " + maxValue);
       offset += maxValue.toString().length() + 1;
 
       if (data[1] == (byte)('6')) {
-        System.out.println("Processing coloured PGM");
+        statusUpdated.accept("Processing coloured PGM");
         lastProcessedImageIsColouredImage = true;
         cols *= 3;
       } else {
-        System.out.println("Processing monochrome PGM (not debayered)");
+        statusUpdated.accept("Processing monochrome PGM (not debayered)");
         lastProcessedImageIsColouredImage = false;
       }
 
       pgmPixels = new int[rows][cols];
 
-      System.out.println("Array: " + cols + "x" + rows);
+      statusUpdated.accept("Array: " + cols + "x" + rows);
       doubleImage = new DoubleImage(w, h, getDefaultValues());
-      System.out.println("Reading inputStream image of size " + w + " by " + h);
+      statusUpdated.accept("Reading inputStream image of size " + w + " by " + h);
 
       int pixelH, pixelL;
 
@@ -208,34 +209,35 @@ public class PGMImageColoured {
       }
       inputStream.close();
     } catch(FileNotFoundException fe) {
-      System.out.println("Had a problem opening a inputStream.");
+      statusUpdated.accept("Had a problem opening a inputStream.");
     } catch (Exception e) {
-      System.out.println(e.toString() + " caught inputStream readPPM.");
+      statusUpdated.accept(e.toString() + " caught inputStream readPPM.");
       e.printStackTrace();
     }
   }
 
-  public static DoubleImage loadPicture(String filename) {
+  public static DoubleImage loadPicture(final String filename, final Consumer<String> statusUpdated) {
     try {
       InputStream stream = new FileInputStream(filename);
-      System.out.println("Trying to open file " + filename);
-      return loadPictureFromInputStream(stream);
+      statusUpdated.accept("Trying to open file " + filename);
+      return loadPictureFromInputStream(stream, statusUpdated);
     } catch (Exception ex) {
       System.out.println("Had a problem opening a inputStream.");
       return null;
     }
   }
 
-  public static DoubleImage loadPictureFromInputStream(InputStream stream) {
+  public static DoubleImage loadPictureFromInputStream
+      (final InputStream stream, final Consumer<String> statusUpdated) {
 
     PGMImageColoured pgmImageWithDebayering = new PGMImageColoured();
     //load from file to memory
-    pgmImageWithDebayering.readPGMArray(stream);
-    System.out.println("PGM read");
+    pgmImageWithDebayering.readPGMArray(stream, statusUpdated);
+    statusUpdated.accept("PGM read");
 
     //calculate minmaxes for to-double conversion
     pgmImageWithDebayering.calculateMinMax();
-    System.out.println("MinMax OK");
+    statusUpdated.accept("MinMax OK");
 
     if (lastProcessedImageIsColouredImage) {
       //no need to colorize, just convert pixels
@@ -243,11 +245,11 @@ public class PGMImageColoured {
     } else {
       //colorize bayer array
       pgmImageWithDebayering.colorizeBayerPixelsToDoublePixels();
-      System.out.println("Colorizing OK");
+      statusUpdated.accept("Colorizing OK");
     }
 
     DoubleImage image = pgmImageWithDebayering.doubleImage;
-    System.out.println("Converting OK");
+    statusUpdated.accept("Converting OK");
 
     return image;
   }

@@ -7,6 +7,7 @@ import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
+import java.util.function.Consumer;
 
 public class GenericConverter {
 
@@ -39,14 +40,14 @@ public class GenericConverter {
     return getFileExtension(filename).equals("pgm");
   }
 
-  public static DoubleImage loadPicture(String filename) {
+  public static DoubleImage loadPicture(String filename, final Consumer<String> statusUpdated) {
     if (isJavaSupportedImage(filename)) {
-      return JpegImage.loadPicture(filename);
+      return JpegImage.loadPicture(filename, statusUpdated);
     } else if (isPGM(filename)) {
-      return PGMImageColoured.loadPicture(filename);
+      return PGMImageColoured.loadPicture(filename, statusUpdated);
     } else if (isRaw(filename)) {
       InputStream dcrawOutput = openDCRawAsConverterToPGM(filename);
-      return PGMImageColoured.loadPictureFromInputStream(dcrawOutput);
+      return PGMImageColoured.loadPictureFromInputStream(dcrawOutput, statusUpdated);
     }
     return null;
   }

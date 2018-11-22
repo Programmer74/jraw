@@ -5,6 +5,7 @@ import com.programmer74.jrawtool.converters.GenericConverter;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.forms.AdjustmentsForm;
 import com.programmer74.jrawtool.forms.HistogramForm;
+import com.programmer74.jrawtool.forms.InfoDialog;
 import com.programmer74.jrawtool.forms.MainForm;
 import com.programmer74.jrawtool.forms.PictureBrowserForm;
 import com.programmer74.jrawtool.forms.PreviewForm;
@@ -46,13 +47,29 @@ public class Application {
     pictureBrowserForm.showForm();
   }
 
-  public void loadApplication(String filename) {
+  public void loadApplication(final String filename) {
+    Thread t = new Thread(() -> {
+      loadApplicationBlocking(filename);
+    });
+    t.start();
+  }
+
+  public void loadApplicationBlocking(String filename) {
 
     if (previewForm != null) {
       closeApplication();
     }
 
-    DoubleImage doubleImage = GenericConverter.loadPicture(filename);
+    InfoDialog infoDialog = new InfoDialog(mainForm);
+    infoDialog.showDialog("Opening file");
+    infoDialog.appendText("Trying to open " + filename);
+    DoubleImage doubleImage = GenericConverter.loadPicture(filename,
+        (status) -> {
+          //System.out.println(status);
+          infoDialog.appendText(status);
+        });
+    infoDialog.hideDialog();
+
     if (doubleImage == null) {
       System.err.println("Seems that the filename is unsupported.");
       return;
