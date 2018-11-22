@@ -56,7 +56,7 @@ public class ImageRollComponent extends JPanel {
       @Override public void mouseMoved(final MouseEvent mouseEvent) {
         mouseX = mouseEvent.getX();
         mouseY = mouseEvent.getY();
-        repaint();
+        forceRepaint();
       }
     });
 
