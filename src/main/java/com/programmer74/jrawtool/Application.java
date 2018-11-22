@@ -3,12 +3,8 @@ package com.programmer74.jrawtool;
 import com.programmer74.jrawtool.components.ImageViewer;
 import com.programmer74.jrawtool.converters.GenericConverter;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
-import com.programmer74.jrawtool.forms.AdjustmentsForm;
-import com.programmer74.jrawtool.forms.HistogramForm;
-import com.programmer74.jrawtool.forms.InfoDialog;
-import com.programmer74.jrawtool.forms.MainForm;
-import com.programmer74.jrawtool.forms.PictureBrowserForm;
-import com.programmer74.jrawtool.forms.PreviewForm;
+import com.programmer74.jrawtool.forms.*;
+
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -18,6 +14,7 @@ public class Application {
   private PreviewForm previewForm = null;
   private AdjustmentsForm adjustmentsForm = null;
   private HistogramForm histogramForm = null;
+  private ImageCroppingRotatingForm rotatingForm = null;
   private MainForm mainForm;
   private PictureBrowserForm pictureBrowserForm;
 
@@ -40,11 +37,19 @@ public class Application {
     histogramForm.setVisible(false);
     mainForm.remove(histogramForm);
     histogramForm.dispose();
+    rotatingForm.setVisible(false);
+    mainForm.remove(rotatingForm);
+    rotatingForm.dispose();
   }
 
   public void openImageBrowser() {
 //    mainForm.getMdiPane().add(pictureBrowserForm);
     pictureBrowserForm.showForm();
+  }
+
+  public void openCropForm() {
+//    mainForm.getMdiPane().add(rotatingForm);
+    rotatingForm.showForm();
   }
 
   public void loadApplication(final String filename) {
@@ -84,11 +89,13 @@ public class Application {
     histogramForm = new HistogramForm(doubleImage, parentPane);
     adjustmentsForm = new AdjustmentsForm(
         imageViewer, doubleImage, histogramForm.getHistogramComponent(), parentPane);
+    rotatingForm = new ImageCroppingRotatingForm(this, doubleImage, parentPane);
     mainForm.setDoubleImage(doubleImage);
 
     parentPane.add(histogramForm);
     parentPane.add(adjustmentsForm);
     parentPane.add(previewForm);
+    parentPane.add(rotatingForm);
 
     imageViewer.addMouseListener(new MouseAdapter() {
       @Override public void mouseClicked(final MouseEvent e) {

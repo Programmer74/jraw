@@ -72,7 +72,7 @@ public class MainForm extends JFrame {
     });
 
     JMenuItem eExitItem = new JMenuItem("Exit");
-    eExitItem.setMnemonic(KeyEvent.VK_E);
+    eExitItem.setMnemonic(KeyEvent.VK_Q);
     eExitItem.setToolTipText("Exit application");
     eExitItem.addActionListener((ActionEvent event) -> {
       System.exit(0);
@@ -83,7 +83,18 @@ public class MainForm extends JFrame {
     file.add(eSaveItem);
     file.add(eExitItem);
 
+    JMenu edit = new JMenu("Edit");
+
+    file.setMnemonic(KeyEvent.VK_E);
+    JMenuItem eCropItem = new JMenuItem("Crop/Rotate");
+    eCropItem.setToolTipText("Crop or rotate image");
+    eCropItem.addActionListener((ActionEvent event) -> {
+      handleCrop();
+    });
+    edit.add(eCropItem);
+
     menubar.add(file);
+    menubar.add(edit);
 
     setJMenuBar(menubar);
   }
@@ -129,6 +140,10 @@ public class MainForm extends JFrame {
         }
       }
     }
+  }
+
+  private void handleCrop() {
+    parentApp.openCropForm();
   }
 
   public void setDoubleImage(final DoubleImage doubleImage) {
