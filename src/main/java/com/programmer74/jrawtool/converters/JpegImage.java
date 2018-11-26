@@ -61,10 +61,29 @@ public class JpegImage {
     }
   }
 
+  private void readBufferedImage(final BufferedImage bufferedImage) {
+    this.bufferedImage = bufferedImage;
+    doubleImage = new DoubleImage(bufferedImage.getWidth(), bufferedImage.getHeight(), getDefaultValues());
+    System.out.println("Reading in image of size " + bufferedImage.getWidth() + " by " + bufferedImage.getHeight());
+  }
+
   public static DoubleImage loadPicture(final String filename, final Consumer<String> statusUpdated) {
     JpegImage jpegImage = new JpegImage();
     //load from file to memory
     jpegImage.readBufferedImage(filename);
+    statusUpdated.accept("JPEG read");
+
+    jpegImage.convertJpegPixelsToDoublePixels();
+    statusUpdated.accept("Converting OK");
+
+    return jpegImage.doubleImage;
+  }
+
+  public static DoubleImage loadPicture(final BufferedImage image, final Consumer<String> statusUpdated) {
+    JpegImage jpegImage = new JpegImage();
+
+    //load from memory to memory
+    jpegImage.readBufferedImage(image);
     statusUpdated.accept("JPEG read");
 
     jpegImage.convertJpegPixelsToDoublePixels();

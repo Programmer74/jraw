@@ -41,15 +41,25 @@ public class GenericConverter {
   }
 
   public static DoubleImage loadPicture(String filename, final Consumer<String> statusUpdated) {
+    DoubleImage result = null;
     if (isJavaSupportedImage(filename)) {
-      return JpegImage.loadPicture(filename, statusUpdated);
+      result = JpegImage.loadPicture(filename, statusUpdated);
     } else if (isPGM(filename)) {
-      return PGMImageColoured.loadPicture(filename, statusUpdated);
+      result = PGMImageColoured.loadPicture(filename, statusUpdated);
     } else if (isRaw(filename)) {
       InputStream dcrawOutput = openDCRawAsConverterToPGM(filename);
-      return PGMImageColoured.loadPictureFromInputStream(dcrawOutput, statusUpdated);
+      result = PGMImageColoured.loadPictureFromInputStream(dcrawOutput, statusUpdated);
     }
-    return null;
+    if (result != null) {
+      result.setOriginalImage(loadPreview(filename).getBufferedImage());
+    }
+    return result;
+  }
+
+  public static DoubleImage loadPicture(BufferedImage bufferedImage, final Consumer<String> statusUpdated) {
+    DoubleImage result = JpegImage.loadPicture(bufferedImage, statusUpdated);
+    result.setOriginalImage(bufferedImage);
+    return result;
   }
 
   public static ByteImage loadPreview(String filename) {

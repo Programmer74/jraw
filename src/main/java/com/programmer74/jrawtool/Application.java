@@ -8,6 +8,7 @@ import com.programmer74.jrawtool.forms.*;
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 
 public class Application {
 
@@ -54,12 +55,19 @@ public class Application {
 
   public void loadApplication(final String filename) {
     Thread t = new Thread(() -> {
-      loadApplicationBlocking(filename);
+      loadApplicationBlocking(filename, null);
     });
     t.start();
   }
 
-  public void loadApplicationBlocking(String filename) {
+  public void loadApplication(final BufferedImage bufferedImage) {
+    Thread t = new Thread(() -> {
+      loadApplicationBlocking(null, bufferedImage);
+    });
+    t.start();
+  }
+
+  public void loadApplicationBlocking(String filename, BufferedImage bufferedImage) {
 
     if (previewForm != null) {
       closeApplication();
@@ -67,18 +75,30 @@ public class Application {
 
     InfoDialog infoDialog = new InfoDialog(mainForm);
     infoDialog.showDialog("Opening file");
-    infoDialog.appendText("Trying to open " + filename);
-    DoubleImage doubleImage = GenericConverter.loadPicture(filename,
-        (status) -> {
-          //System.out.println(status);
-          infoDialog.appendText(status);
-        });
-    infoDialog.hideDialog();
 
-    if (doubleImage == null) {
+    DoubleImage doubleImageC = null;
+    if (filename != null) {
+      infoDialog.appendText("Trying to open " + filename);
+      doubleImageC = GenericConverter.loadPicture(filename,
+          (status) -> {
+            //System.out.println(status);
+            infoDialog.appendText(status);
+          });
+      infoDialog.hideDialog();
+    } else {
+      doubleImageC = GenericConverter.loadPicture(bufferedImage,
+          (status) -> {
+            //System.out.println(status);
+            infoDialog.appendText(status);
+          });
+    }
+
+    if (doubleImageC == null) {
       System.err.println("Seems that the filename is unsupported.");
       return;
     }
+
+    final DoubleImage doubleImage = doubleImageC;
     ImageViewer imageViewer = new ImageViewer(doubleImage);
 
     final JDesktopPane parentPane = mainForm.getMdiPane();

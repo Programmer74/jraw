@@ -32,8 +32,8 @@ public class DoubleImage implements PaintableImage {
 
   private BufferedImage bufferedImage;
   private BufferedImage bufferedImagePreviewFast;
-  private BufferedImage oldRotatedBufferedImage;
-  private double oldRotationAngle = -9999.0;
+
+  private BufferedImage originalImage = null;
 
   private boolean isDirty = true;
   private boolean isFastPreviewDirty = true;
@@ -331,36 +331,6 @@ public class DoubleImage implements PaintableImage {
     return bufferedImagePreviewFast;
   }
 
-  public BufferedImage getRotatedPreview(double angleInDegrees, GraphicsConfiguration gc) {
-    double angle = angleInDegrees * Math.PI / 180;
-    if (oldRotationAngle == angle) {
-      return oldRotatedBufferedImage;
-    }
-    if (isFastPreviewDirty) {
-      isFastPreviewDirty = false;
-      paintFastPreviewOnSmallerBufferedImage(bufferedImagePreviewFast, 0, 0, width, height);
-    }
-    double sin = Math.abs(Math.sin(angle));
-    double cos = Math.abs(Math.cos(angle));
-    int w = bufferedImagePreviewFast.getWidth();
-    int h = bufferedImagePreviewFast.getHeight();
-    int neww = (int) Math.floor(w * cos + h * sin);
-    int newh = (int) Math.floor(h * cos + w * sin);
-    int transparency = bufferedImagePreviewFast.getColorModel().getTransparency();
-    BufferedImage result = gc.createCompatibleImage(neww, newh, transparency);
-    Graphics2D g = result.createGraphics();
-    g.translate((neww - w) / 2, (newh - h) / 2);
-    g.rotate(angle, w / 2, h / 2);
-    g.drawRenderedImage(bufferedImagePreviewFast, null);
-
-    if (oldRotatedBufferedImage != null) {
-      oldRotatedBufferedImage.flush();
-    }
-    oldRotatedBufferedImage = result;
-    oldRotationAngle = angle;
-    return result;
-  }
-
   private void applyPreviewCoordinates(
       int paintX, int paintY, int paintW, int paintH,
       int windowWidth, int windowHeight) {
@@ -439,6 +409,14 @@ public class DoubleImage implements PaintableImage {
     } else {
       g.drawImage(preview, paintX, paintY, paintW, paintH, parent);
     }
+  }
+
+  public BufferedImage getOriginalImage() {
+    return originalImage;
+  }
+
+  public void setOriginalImage(BufferedImage originalImage) {
+    this.originalImage = originalImage;
   }
 
   @Override
