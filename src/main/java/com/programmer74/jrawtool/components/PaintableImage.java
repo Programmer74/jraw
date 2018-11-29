@@ -1,6 +1,7 @@
 package com.programmer74.jrawtool.components;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.function.Consumer;
 
 public interface PaintableImage {
@@ -28,4 +29,6 @@ public interface PaintableImage {
 
   void setAfterSlowPreviewRenderingEndCallback(
       final Consumer<Integer> afterSlowPreviewRenderingEndCallback);
+
+  BufferedImage burnPreview(int maxWidth);
 }

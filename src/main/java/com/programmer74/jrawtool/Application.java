@@ -1,6 +1,7 @@
 package com.programmer74.jrawtool;
 
 import com.programmer74.jrawtool.components.ImageViewer;
+import com.programmer74.jrawtool.components.PaintableImage;
 import com.programmer74.jrawtool.converters.GenericConverter;
 import com.programmer74.jrawtool.doubleimage.DoubleImage;
 import com.programmer74.jrawtool.forms.*;
@@ -16,6 +17,7 @@ public class Application {
   private AdjustmentsForm adjustmentsForm = null;
   private HistogramForm histogramForm = null;
   private ImageCroppingRotatingForm rotatingForm = null;
+  private DoubleSidedPreviewForm chromaticAberrationsReducerForm = null;
   private MainForm mainForm;
   private PictureBrowserForm pictureBrowserForm;
 
@@ -41,6 +43,9 @@ public class Application {
     rotatingForm.setVisible(false);
     mainForm.remove(rotatingForm);
     rotatingForm.dispose();
+    chromaticAberrationsReducerForm.setVisible(false);
+    mainForm.remove(chromaticAberrationsReducerForm);
+    chromaticAberrationsReducerForm.dispose();
   }
 
   public void openImageBrowser() {
@@ -51,6 +56,16 @@ public class Application {
   public void openCropForm() {
 //    mainForm.getMdiPane().add(rotatingForm);
     rotatingForm.showForm();
+  }
+
+  public void openChromaticAberrationsReducerForm() {
+//    mainForm.getMdiPane().add(rotatingForm);
+    if (chromaticAberrationsReducerForm == null) {
+      PaintableImage img1 = previewForm.getImageViewer().getPaintableImage();
+      chromaticAberrationsReducerForm = new DoubleSidedPreviewForm(this, img1, img1, mainForm.getMdiPane());
+      mainForm.getMdiPane().add(chromaticAberrationsReducerForm);
+    }
+    chromaticAberrationsReducerForm.showForm();
   }
 
   public void loadApplication(final String filename) {
@@ -110,12 +125,14 @@ public class Application {
     adjustmentsForm = new AdjustmentsForm(
         imageViewer, doubleImage, histogramForm.getHistogramComponent(), parentPane);
     rotatingForm = new ImageCroppingRotatingForm(this, doubleImage, parentPane);
+
     mainForm.setDoubleImage(doubleImage);
 
     parentPane.add(histogramForm);
     parentPane.add(adjustmentsForm);
     parentPane.add(previewForm);
     parentPane.add(rotatingForm);
+
 
     imageViewer.addMouseListener(new MouseAdapter() {
       @Override public void mouseClicked(final MouseEvent e) {

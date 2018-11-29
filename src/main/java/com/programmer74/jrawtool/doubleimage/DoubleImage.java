@@ -420,6 +420,13 @@ public class DoubleImage implements PaintableImage {
   }
 
   @Override
+  public BufferedImage burnPreview(int maxw) {
+    isDirty = true;
+    BufferedImage original = getBufferedImage();
+    return BufferedImageUtils.getShrinkedImage(original, maxw);
+  }
+
+  @Override
   public void setAfterChunkPaintedCallback(
       final Consumer<Integer> afterChunkPaintedCallback) {
     this.afterChunkPaintedCallback = afterChunkPaintedCallback;

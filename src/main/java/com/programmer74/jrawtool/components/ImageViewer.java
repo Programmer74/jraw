@@ -236,4 +236,8 @@ public class ImageViewer extends Component {
   private void setNormalCursor() {
     setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
   }
+
+  public PaintableImage getPaintableImage() {
+    return paintableImage;
+  }
 }

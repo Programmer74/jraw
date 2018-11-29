@@ -86,12 +86,19 @@ public class MainForm extends JFrame {
     JMenu edit = new JMenu("Edit");
 
     file.setMnemonic(KeyEvent.VK_E);
+
     JMenuItem eCropItem = new JMenuItem("Crop/Rotate");
     eCropItem.setToolTipText("Crop or rotate image");
     eCropItem.addActionListener((ActionEvent event) -> {
       handleCrop();
     });
     edit.add(eCropItem);
+    JMenuItem eChromaRedItem = new JMenuItem("ChromaReducer");
+    eChromaRedItem.setToolTipText("Try to reduce chromatic aberrations");
+    eChromaRedItem.addActionListener((ActionEvent event) -> {
+      handleChromaRed();
+    });
+    edit.add(eChromaRedItem);
 
     menubar.add(file);
     menubar.add(edit);
@@ -102,6 +109,8 @@ public class MainForm extends JFrame {
   public void showForm() {
     setVisible(true);
   }
+
+
 
   private void handleOpen() {
     JFileChooser fileChooser = new JFileChooser();
@@ -144,6 +153,10 @@ public class MainForm extends JFrame {
 
   private void handleCrop() {
     parentApp.openCropForm();
+  }
+
+  private void handleChromaRed() {
+    parentApp.openChromaticAberrationsReducerForm();
   }
 
   public void setDoubleImage(final DoubleImage doubleImage) {

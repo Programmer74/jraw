@@ -10,6 +10,8 @@ public class PreviewForm extends JInternalFrame {
 
   private Application parentApp;
 
+  private ImageViewer imageViewer;
+
   public PreviewForm(final Application app, final ImageViewer imageViewer,
       final String filename, final JDesktopPane parentPane) {
     //resizable, closable, maximizable, iconifiable
@@ -22,6 +24,8 @@ public class PreviewForm extends JInternalFrame {
       }
     });
 
+    this.imageViewer = imageViewer;
+
     add(imageViewer);
 
     pack();
@@ -32,5 +36,9 @@ public class PreviewForm extends JInternalFrame {
   public void showForm() {
     setVisible(true);
     moveToFront();
+  }
+
+  public ImageViewer getImageViewer() {
+    return imageViewer;
   }
 }

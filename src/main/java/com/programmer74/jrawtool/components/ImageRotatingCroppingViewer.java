@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static com.programmer74.jrawtool.doubleimage.BufferedImageUtils.getShrinkedImage;
+
 public class ImageRotatingCroppingViewer extends Component {
 
   private BufferedImage originalImage;
@@ -46,7 +48,7 @@ public class ImageRotatingCroppingViewer extends Component {
 
   public ImageRotatingCroppingViewer(final BufferedImage originalImage) {
     this.originalImage = originalImage;
-    this.shrinkedImage = getShrinkedImage(originalImage);
+    this.shrinkedImage = getShrinkedImage(originalImage, 800);
     rotatedImage = getRotatedImage(shrinkedImage, 0, gc);
     this.addMouseListener(new MouseAdapter() {
       @Override public void mousePressed(final MouseEvent mouseEvent) {
@@ -146,32 +148,6 @@ public class ImageRotatingCroppingViewer extends Component {
     oldRotationAngle = angle;
     return result;
   }
-
-  private BufferedImage getShrinkedImage(BufferedImage originalImage) {
-
-    int width = originalImage.getWidth();
-    int height = originalImage.getHeight();
-
-    int maxw = 800;
-
-    if ((width > maxw) || (height > maxw)) {
-      double k = width * 1.0 / height;
-      if (width > height) {
-        width = maxw;
-        height = (int)(width * 1.0 / k);
-      } else {
-        height = maxw;
-        width = (int)(height * k);
-      }
-    }
-
-    BufferedImage newImage = new BufferedImage(width, height, originalImage.getType());
-    Graphics g = newImage.getGraphics();
-    g.drawImage(originalImage, 0, 0, width, height, null);
-    return newImage;
-  }
-
-
 
   private void centerPaintedImage() {
     int componentWidth = getWidth();

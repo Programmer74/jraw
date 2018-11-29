@@ -1,6 +1,8 @@
 package com.programmer74.jrawtool.byteimage;
 
 import com.programmer74.jrawtool.components.PaintableImage;
+import com.programmer74.jrawtool.doubleimage.BufferedImageUtils;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.function.Consumer;
@@ -30,6 +32,11 @@ public class ByteImage implements PaintableImage {
       final int paintH, final int windowWidth, final int windowHeight) {
 
     g.drawImage(bufferedImage, paintX, paintY, paintW, paintH, null);
+  }
+
+  @Override
+  public BufferedImage burnPreview(int maxWidth) {
+    return BufferedImageUtils.getShrinkedImage(bufferedImage, maxWidth);
   }
 
   @Override public void setParent(final Component parent) {
