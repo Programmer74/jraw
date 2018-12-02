@@ -38,11 +38,11 @@ public class ImageCroppingRotatingForm extends JInternalFrame {
     });
 
     imagePane = new JPanel();
-    viewer = new ImageRotatingCroppingViewer(doubleImage.getOriginalImage());
+    viewer = new ImageRotatingCroppingViewer(doubleImage);
     imagePane.add(viewer);
 
     controlsPane = new JPanel();
-    DisplayingSlider dsAngle = new DisplayingSlider("Angle", -180.0, 180.0, 0.0);
+    DisplayingSlider dsAngle = new DisplayingSlider("Angle", -90.0, 90.0, 0.0);
     dsAngle.setSliderChangeListener((e) -> viewer.setAngleDegrees(dsAngle.getValue()));
     controlsPane.add(dsAngle);
 
@@ -61,7 +61,7 @@ public class ImageCroppingRotatingForm extends JInternalFrame {
 
     JButton cmdApply = new JButton("Apply");
     cmdApply.addActionListener((e) -> {
-      BufferedImage rotatedAndCroppedImage = viewer.getRotatedAndCroppedImage(
+      DoubleImage rotatedAndCroppedImage = viewer.getRotatedAndCroppedImage(
           System.out::println
       );
       parentApp.loadApplication(rotatedAndCroppedImage);

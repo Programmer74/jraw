@@ -199,4 +199,39 @@ public class BufferedImageUtils {
     return image;
   }
 
+  public static BufferedImage rotate(BufferedImage originalImage, double angle) {
+    int i, j, x, y, new_x, new_y;
+    double v_sin, v_cos;
+//    double[] neutral = new double[]{255, 255, 255};
+    int neutral = 0x00ffffff;
+
+    if(angle < -90 || 90 < angle) {
+      return originalImage;
+    }
+    angle = angle * Math.PI / 180.0f;
+    v_cos = Math.cos(angle);
+    v_sin = Math.sin(angle);
+
+    int width = originalImage.getWidth();
+    int height = originalImage.getHeight();
+
+    int newWidth = (int)Math.max(width * v_cos - height * v_sin, width * v_cos + height * v_sin);
+    int newHeight = (int)Math.max(width * v_sin + height * v_cos, -width * v_sin + height * v_cos);
+    BufferedImage result = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
+
+    for (i = 0; i < newWidth; i++) {
+      for (j = 0; j < newHeight; j++) {
+        x = i - newWidth / 2;
+        y = j - newHeight / 2;
+        new_x = (int)(((x * v_cos - y * v_sin)) + width / 2);
+        new_y = (int)(((x * v_sin + y * v_cos)) + height / 2);
+        if ((new_x >= width) || (new_y >= height) || (new_x < 0) || (new_y < 0)) {
+          result.setRGB(i, j, neutral);
+        } else {
+          result.setRGB(i, j, originalImage.getRGB(new_x, new_y));
+        }
+      }
+    }
+    return result;
+  }
 }

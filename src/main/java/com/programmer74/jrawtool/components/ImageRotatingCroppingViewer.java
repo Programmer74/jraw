@@ -1,17 +1,22 @@
 package com.programmer74.jrawtool.components;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
-
+import com.programmer74.jrawtool.doubleimage.BufferedImageUtils;
 import static com.programmer74.jrawtool.doubleimage.BufferedImageUtils.getShrinkedImage;
+import com.programmer74.jrawtool.doubleimage.DoubleImage;
+import com.programmer74.jrawtool.doubleimage.DoubleImageUtils;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.awt.image.BufferedImage;
+import java.util.function.Consumer;
 
 public class ImageRotatingCroppingViewer extends Component {
 
   private BufferedImage originalImage;
+  private DoubleImage originalDoubleImage;
   private BufferedImage shrinkedImage;
   private BufferedImage rotatedImage;
 
@@ -31,11 +36,6 @@ public class ImageRotatingCroppingViewer extends Component {
 
   private boolean doAutoScale = true;
 
-  private GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-  private GraphicsDevice gd = ge.getDefaultScreenDevice();
-  private GraphicsConfiguration gc = gd.getDefaultConfiguration();
-  private Map<Object, Object> hints = new HashMap<>();
-
   private Color semiTransparentBlack = new Color(0,0,0, 192);
 
   private int cropRatioX = 3;
@@ -46,10 +46,11 @@ public class ImageRotatingCroppingViewer extends Component {
   private int cropFromW = -1;
   private int cropFromH = -1;
 
-  public ImageRotatingCroppingViewer(final BufferedImage originalImage) {
-    this.originalImage = originalImage;
+  public ImageRotatingCroppingViewer(final DoubleImage originalDoubleImage) {
+    this.originalImage = originalDoubleImage.getOriginalImage();
+    this.originalDoubleImage = originalDoubleImage;
     this.shrinkedImage = getShrinkedImage(originalImage, 800);
-    rotatedImage = getRotatedImage(shrinkedImage, 0, gc);
+    rotatedImage = getRotatedImage(shrinkedImage, 0);
     this.addMouseListener(new MouseAdapter() {
       @Override public void mousePressed(final MouseEvent mouseEvent) {
         pressedX = mouseEvent.getX();
@@ -96,7 +97,6 @@ public class ImageRotatingCroppingViewer extends Component {
     });
 
     recalculatePaintParams();
-    hints.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
   }
 
   public void setScale(final double newScale) {
@@ -116,36 +116,22 @@ public class ImageRotatingCroppingViewer extends Component {
 
   public void setAngleDegrees(double angleDegrees) {
     this.angleDegrees = angleDegrees;
-    rotatedImage = getRotatedImage(shrinkedImage, angleDegrees, gc);
+    rotatedImage = getRotatedImage(shrinkedImage, angleDegrees);
     this.repaint();
   }
 
-  private BufferedImage getRotatedImage(BufferedImage originalImage, double angleInDegrees, GraphicsConfiguration gc) {
-    double angle = angleInDegrees * Math.PI / 180;
-    if (oldRotationAngle == angle) {
+  private BufferedImage getRotatedImage(BufferedImage originalImage, double angleInDegrees) {
+    if (oldRotationAngle == angleInDegrees) {
       return oldRotatedBufferedImage;
     }
 
-    double sin = Math.abs(Math.sin(angle));
-    double cos = Math.abs(Math.cos(angle));
-    int w = originalImage.getWidth();
-    int h = originalImage.getHeight();
-    int neww = (int) Math.floor(w * cos + h * sin);
-    int newh = (int) Math.floor(h * cos + w * sin);
-    int transparency = originalImage.getColorModel().getTransparency();
-    BufferedImage result = gc.createCompatibleImage(neww, newh, transparency);
-    Graphics2D g = result.createGraphics();
-
-    g.setRenderingHints(hints);
-    g.translate((neww - w) / 2, (newh - h) / 2);
-    g.rotate(angle, w / 2, h / 2);
-    g.drawRenderedImage(originalImage, null);
+    BufferedImage result = BufferedImageUtils.rotate(originalImage, angleInDegrees);
 
     if (oldRotatedBufferedImage != null) {
       oldRotatedBufferedImage.flush();
     }
     oldRotatedBufferedImage = result;
-    oldRotationAngle = angle;
+    oldRotationAngle = angleInDegrees;
     return result;
   }
 
@@ -220,6 +206,7 @@ public class ImageRotatingCroppingViewer extends Component {
     g.setColor(Color.BLACK);
     g.fillRect(0, 0, getWidth(), getHeight());
     g.drawImage(rotatedImage, paintX, paintY, paintW, paintH, null);
+//    g.drawImage(rotatedImage, 0, 0, rotatedImage.getWidth(), rotatedImage.getHeight(), null);
 
     double k = cropRatioX * 1.0 / cropRatioY;
     cropFromW = 0;
@@ -243,16 +230,15 @@ public class ImageRotatingCroppingViewer extends Component {
     cropFromX = (getWidth() - cropFromW) / 2;
     cropFromY = (getHeight() - cropFromH) / 2;
 
-    g.setColor(Color.RED);
-    g.drawRect(cropFromX, cropFromY, cropFromW, cropFromH);
-
-
     g.setColor(semiTransparentBlack);
     g.fillRect(0, 0, cropFromX, getHeight());
     g.fillRect(cropFromX + cropFromW, 0, cropFromX, getHeight());
 
     g.fillRect(0, 0, getWidth(), cropFromY);
     g.fillRect(0, cropFromY + cropFromH, getWidth(), cropFromY);
+
+    g.setColor(Color.RED);
+    g.drawRect(cropFromX, cropFromY, cropFromW, cropFromH);
   }
 
   @Override
@@ -278,16 +264,26 @@ public class ImageRotatingCroppingViewer extends Component {
     repaint();
   }
 
-  public BufferedImage getRotatedAndCroppedImage(Consumer<String> status) {
+  public DoubleImage getRotatedAndCroppedImage(Consumer<String> status) {
 
     status.accept("Rotating image...");
-    BufferedImage rotatedImage = getRotatedImage(originalImage, angleDegrees, gc);
+    DoubleImage rotatedOriginalImage = DoubleImageUtils
+        .getRotatedImage(originalDoubleImage, angleDegrees, status);
 
-    status.accept("Original size: " + originalImage.getWidth() + "x" + originalImage.getHeight());
-    status.accept("Shrinked size: " + shrinkedImage.getWidth() + "x" + shrinkedImage.getHeight());
+    status.accept("Original size: " + rotatedOriginalImage.getWidth() + "x" + rotatedOriginalImage.getHeight());
+    status.accept("Shrinked size: " + rotatedImage.getWidth() + "x" + rotatedImage.getHeight());
 
-    double scaleX = originalImage.getWidth() * 1.0 / shrinkedImage.getWidth();
-    double scaleY = originalImage.getHeight() * 1.0 / shrinkedImage.getHeight();
+    double scaleX = rotatedOriginalImage.getWidth() * 1.0 / rotatedImage.getWidth();
+    double scaleY = rotatedOriginalImage.getHeight() * 1.0 / rotatedImage.getHeight();
+
+    int offsetX = (int)((paintX * 1.0 / paintW) * 1.0 * rotatedImage.getWidth());
+    int offsetY = (int)((paintY * 1.0 / paintH) * 1.0 * rotatedImage.getHeight());
+
+    cropFromX -= offsetX;
+    cropFromY -= offsetY;
+
+    cropFromW += offsetX;
+    cropFromH += offsetY;
 
     status.accept("X transform: " + cropFromX + " to " + cropFromX * scaleX);
     status.accept("Y transform: " + cropFromY + " to " + cropFromY * scaleY);
@@ -304,11 +300,6 @@ public class ImageRotatingCroppingViewer extends Component {
     int newY = (int)(cropFromY * scaleY);
 
     status.accept("Painting...");
-    BufferedImage croppedImage = new BufferedImage(newW, newH, originalImage.getType());
-    Graphics g = croppedImage.getGraphics();
-
-    g.drawImage(rotatedImage, -newX, -newY, originalImage.getWidth(), originalImage.getHeight(), null);
-
-    return croppedImage;
+    return DoubleImageUtils.getCroppedImage(rotatedOriginalImage, newX, newY, newW, newH);
   }
 }

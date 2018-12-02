@@ -43,9 +43,11 @@ public class Application {
     rotatingForm.setVisible(false);
     mainForm.remove(rotatingForm);
     rotatingForm.dispose();
-    chromaticAberrationsReducerForm.setVisible(false);
-    mainForm.remove(chromaticAberrationsReducerForm);
-    chromaticAberrationsReducerForm.dispose();
+    if (chromaticAberrationsReducerForm != null) {
+      chromaticAberrationsReducerForm.setVisible(false);
+      mainForm.remove(chromaticAberrationsReducerForm);
+      chromaticAberrationsReducerForm.dispose();
+    }
   }
 
   public void openImageBrowser() {
@@ -75,14 +77,14 @@ public class Application {
     t.start();
   }
 
-  public void loadApplication(final BufferedImage bufferedImage) {
+  public void loadApplication(final DoubleImage doubleImage) {
     Thread t = new Thread(() -> {
-      loadApplicationBlocking(null, bufferedImage);
+      loadApplicationBlocking(null, doubleImage);
     });
     t.start();
   }
 
-  public void loadApplicationBlocking(String filename, BufferedImage bufferedImage) {
+  public void loadApplicationBlocking(String filename, DoubleImage doubleImageLoadedFrom) {
 
     if (previewForm != null) {
       closeApplication();
@@ -101,11 +103,9 @@ public class Application {
           });
       infoDialog.hideDialog();
     } else {
-      doubleImageC = GenericConverter.loadPicture(bufferedImage,
-          (status) -> {
-            //System.out.println(status);
-            infoDialog.appendText(status);
-          });
+      doubleImageC = doubleImageLoadedFrom;
+      doubleImageC.setOriginalImage(doubleImageLoadedFrom.getBufferedImage());
+      infoDialog.hideDialog();
     }
 
     if (doubleImageC == null) {

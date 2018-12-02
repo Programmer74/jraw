@@ -109,10 +109,20 @@ public class DoubleImage implements PaintableImage {
     return pixels;
   }
 
+  public double[] getPixel(int x, int y) {
+    return pixels[x][y];
+  }
+
   public void setPixel(int x, int y, double r, double g, double b) {
     pixels[x][y][0] = r;
     pixels[x][y][1] = g;
     pixels[x][y][2] = b;
+  }
+
+  public void setPixel(int x, int y, double[] pixel) {
+    pixels[x][y][0] = pixel[0];
+    pixels[x][y][1] = pixel[1];
+    pixels[x][y][2] = pixel[2];
   }
 
   public void getColorizedPixel(int x, int y, double[] output) {

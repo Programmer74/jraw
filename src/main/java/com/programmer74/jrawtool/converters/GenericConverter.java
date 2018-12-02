@@ -56,12 +56,6 @@ public class GenericConverter {
     return result;
   }
 
-  public static DoubleImage loadPicture(BufferedImage bufferedImage, final Consumer<String> statusUpdated) {
-    DoubleImage result = JpegImage.loadPicture(bufferedImage, statusUpdated);
-    result.setOriginalImage(bufferedImage);
-    return result;
-  }
-
   public static ByteImage loadPreview(String filename) {
     if (isRaw(filename)) {
       return PGMImageColoured.loadPreview(filename);
